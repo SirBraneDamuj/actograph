@@ -1,0 +1,7 @@
+type Query {
+  noop: String
+}
+
+type Mutation {
+  noop: String
+}

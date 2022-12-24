@@ -1,0 +1,13 @@
+type Movie {
+  tmdbId: String!
+  title: String!
+  posterPath: String
+}
+
+input FetchMovieParams {
+  tmdbId: String!
+}
+
+extend type Query {
+  fetchMovie(params: FetchMovieParams!): Movie
+}

@@ -1,0 +1,36 @@
+#import Movie from '../movie/movie.graphql'
+#import PaginationParams from '../graphql/pagination.graphql'
+#import PageInfo from '../graphql/pagination.graphql'
+
+type WatchedMoviesConnection {
+  totalCount: Int!
+  edges: [WatchedMovieEdge!]!
+  pageInfo: PageInfo
+}
+
+type WatchedMovieEdge {
+  node: Movie!
+  cursor: String!
+}
+
+type User {
+  id: ID!
+  username: String!
+}
+
+input UserFetchParams {
+  id: ID!
+}
+
+input MarkWatchedMovieParams {
+  userId: ID!
+  tmdbId: String!
+}
+
+extend type Query {
+  fetchUser(params: UserFetchParams!): User
+}
+
+extend type Mutation {
+  markWatchedMovie(params: MarkWatchedMovieParams!): Movie
+}
