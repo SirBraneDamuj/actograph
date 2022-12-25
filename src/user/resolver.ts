@@ -43,6 +43,12 @@ const resolvers: Resolvers = {
         }
       });
       return movie;
+    },
+    createUser: async (_parent: unknown, { params }, _context: unknown) => {
+      const user = await db.user.create({
+        data: params,
+      });
+      return user;
     }
   }
 };

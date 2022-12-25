@@ -27,10 +27,15 @@ input MarkWatchedMovieParams {
   tmdbId: String!
 }
 
+input CreateUserParams {
+  username: String!
+}
+
 extend type Query {
   fetchUser(params: UserFetchParams!): User
 }
 
 extend type Mutation {
   markWatchedMovie(params: MarkWatchedMovieParams!): Movie
+  createUser(params: CreateUserParams!): User!
 }
