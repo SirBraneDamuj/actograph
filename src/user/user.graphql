@@ -27,12 +27,18 @@ input MarkWatchedMovieParams {
   tmdbId: String!
 }
 
+input MovieListParams {
+  userId: ID!
+  pagination: PaginationParams
+}
+
 input CreateUserParams {
   username: String!
 }
 
 extend type Query {
   fetchUser(params: UserFetchParams!): User
+  listWatchedMovies(params: MovieListParams!): WatchedMoviesConnection!
 }
 
 extend type Mutation {

@@ -2,6 +2,11 @@ import db from '../db/index.js';
 import Tmdb from '../tmdb.js';
 import { Resolvers } from "../__generated__/resolvers-types.js";
 
+const defaultPage = {
+  first: 15,
+  after: null,
+};
+
 const resolvers: Resolvers = {
   Query: {
     fetchUser: async (_parent: unknown,  { params }, _context: unknown) => {
@@ -15,6 +20,53 @@ const resolvers: Resolvers = {
       }
       return user;
     },
+    listWatchedMovies: async (_parent: unknown, { params }, _context: unknown) => {
+      const user = await db.user.findUnique({
+        where: {
+          id: params.userId,
+        },
+      });
+      if (!user) {
+        throw new Error(`Failed to find user ${params.userId} :(`);
+      }
+      const pagination = params.pagination || defaultPage;
+      const userMovies = await db.userMovie.findMany({
+        include: {
+          movie: true,
+        },
+        where: {
+          user_id: params.userId,
+          updated_at: pagination.after ? {
+            gt: pagination.after
+          } : undefined,
+        },
+        orderBy: {
+          updated_at: 'desc',
+        },
+      });
+      const total = await db.userMovie.count({
+        where: {
+          user_id: params.userId,
+        },
+      });
+      return {
+        totalCount: total,
+        edges: userMovies.map((userMovie) => ({
+          node: {
+            title: userMovie.movie.title,
+            tmdbId: userMovie.movie.tmdbId,
+            posterPath: userMovie.movie.poster_path,
+          },
+          cursor: userMovie.updated_at.toISOString(),
+        })),
+        pageInfo: {
+          firstCursor: userMovies[0].updated_at.toISOString(),
+          endCursor: userMovies[userMovies.length-1].updated_at.toISOString(),
+          hasNextPage: false,
+          hasPrevPage: false,
+        }
+      }
+    }
   },
   Mutation: {
     markWatchedMovie: async (_parent: unknown, { params }, _context: unknown) => {
@@ -49,7 +101,7 @@ const resolvers: Resolvers = {
         data: params,
       });
       return user;
-    }
+    },
   }
 };
 

@@ -11,21 +11,25 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid()) @db.Uuid
-  username   String
-  updated_at DateTime @updatedAt
+  id            String      @id @default(uuid()) @db.Uuid
+  username      String
+  updated_at    DateTime    @updatedAt
+  watchedMovies UserMovie[] @relation("MovieViewer")
 }
 
 model Movie {
-  tmdbId      String   @id
+  tmdbId      String      @id
   title       String
   poster_path String?
-  updated_at  DateTime @updatedAt
+  updated_at  DateTime    @updatedAt
+  watchers    UserMovie[] @relation("WatchedMovie")
 }
 
 model UserMovie {
   user_id    String   @db.Uuid
+  user       User     @relation("MovieViewer", fields: [user_id], references: [id])
   movie_id   String
+  movie      Movie    @relation("WatchedMovie", fields: [movie_id], references: [tmdbId])
   updated_at DateTime @updatedAt
 
   @@id(fields: [user_id, movie_id])
