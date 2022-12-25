@@ -1,4 +1,4 @@
-import db from '../db/index.js';
+import db from "../db/index.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
 
 const resolvers: Resolvers = {
@@ -7,7 +7,7 @@ const resolvers: Resolvers = {
       return db.movie.findUnique({
         where: {
           tmdbId: params.id,
-        }
+        },
       });
     },
   },

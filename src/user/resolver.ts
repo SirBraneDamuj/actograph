@@ -1,5 +1,5 @@
-import db from '../db/index.js';
-import Tmdb from '../tmdb.js';
+import db from "../db/index.js";
+import Tmdb from "../tmdb.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
 
 const defaultPage = {
@@ -9,7 +9,7 @@ const defaultPage = {
 
 const resolvers: Resolvers = {
   Query: {
-    fetchUser: async (_parent: unknown,  { params }, _context: unknown) => {
+    fetchUser: async (_parent: unknown, { params }, _context: unknown) => {
       const user = await db.user.findUnique({
         where: {
           id: params.id,
@@ -20,7 +20,11 @@ const resolvers: Resolvers = {
       }
       return user;
     },
-    listWatchedMovies: async (_parent: unknown, { params }, _context: unknown) => {
+    listWatchedMovies: async (
+      _parent: unknown,
+      { params },
+      _context: unknown,
+    ) => {
       const user = await db.user.findUnique({
         where: {
           id: params.userId,
@@ -36,12 +40,14 @@ const resolvers: Resolvers = {
         },
         where: {
           user_id: params.userId,
-          updated_at: pagination.after ? {
-            gt: pagination.after
-          } : undefined,
+          updated_at: pagination.after
+            ? {
+                gt: pagination.after,
+              }
+            : undefined,
         },
         orderBy: {
-          updated_at: 'desc',
+          updated_at: "desc",
         },
       });
       const total = await db.userMovie.count({
@@ -61,15 +67,19 @@ const resolvers: Resolvers = {
         })),
         pageInfo: {
           firstCursor: userMovies[0].updated_at.toISOString(),
-          endCursor: userMovies[userMovies.length-1].updated_at.toISOString(),
+          endCursor: userMovies[userMovies.length - 1].updated_at.toISOString(),
           hasNextPage: false,
           hasPrevPage: false,
-        }
-      }
-    }
+        },
+      };
+    },
   },
   Mutation: {
-    markWatchedMovie: async (_parent: unknown, { params }, _context: unknown) => {
+    markWatchedMovie: async (
+      _parent: unknown,
+      { params },
+      _context: unknown,
+    ) => {
       let movie = await db.movie.findUnique({
         where: {
           tmdbId: params.tmdbId,
@@ -82,17 +92,17 @@ const resolvers: Resolvers = {
         }
         movie = await db.movie.create({
           data: {
-            tmdbId: loadedMovie.id!.toString(),
-            title: loadedMovie.title!,
+            tmdbId: loadedMovie.id.toString(),
+            title: loadedMovie.title || "Somehow this doesn't have a title", // TODO: how can I more safely handle these responses
             poster_path: loadedMovie.poster_path,
-          }
+          },
         });
       }
       await db.userMovie.create({
         data: {
           movie_id: movie.tmdbId,
           user_id: params.userId,
-        }
+        },
       });
       return movie;
     },
@@ -102,7 +112,7 @@ const resolvers: Resolvers = {
       });
       return user;
     },
-  }
+  },
 };
 
 export default resolvers;

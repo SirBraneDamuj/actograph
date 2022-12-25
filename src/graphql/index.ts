@@ -1,14 +1,13 @@
-import { ApolloServer, BaseContext } from "@apollo/server";
-import resolvers from './resolvers.js';
-import typeDefs from './typeDefs.js';
+import { ApolloServer, ApolloServerPlugin, BaseContext } from "@apollo/server";
+import resolvers from "./resolvers.js";
+import typeDefs from "./typeDefs.js";
 
-
-export function buildServer(plugins: any[]): ApolloServer<BaseContext> {
+export function buildServer(
+  plugins: ApolloServerPlugin<BaseContext>[],
+): ApolloServer<BaseContext> {
   return new ApolloServer({
     typeDefs,
     resolvers,
-    plugins: [
-      ...plugins,
-    ],
+    plugins: [...plugins],
   });
 }

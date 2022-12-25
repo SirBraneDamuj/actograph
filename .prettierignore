@@ -1,0 +1,4 @@
+dist/
+src/__generated__/
+README.md
+tsconfig.json
