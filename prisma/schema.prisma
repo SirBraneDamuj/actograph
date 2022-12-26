@@ -18,11 +18,12 @@ model User {
 }
 
 model Movie {
-  tmdbId      String      @id
+  tmdbId      String        @id
   title       String
   poster_path String?
-  updated_at  DateTime    @updatedAt
-  watchers    UserMovie[] @relation("WatchedMovie")
+  updated_at  DateTime      @updatedAt
+  watchers    UserMovie[]   @relation("WatchedMovie")
+  credits     MovieCredit[]
 }
 
 model UserMovie {
@@ -33,4 +34,23 @@ model UserMovie {
   updated_at DateTime @updatedAt
 
   @@id(fields: [user_id, movie_id])
+}
+
+model MovieCredit {
+  movie_id       String
+  movie          Movie    @relation(fields: [movie_id], references: [tmdbId])
+  actor_id       String
+  actor          Person   @relation(fields: [actor_id], references: [tmdb_id])
+  character_name String
+  cast_order     Int
+  updated_at     DateTime @updatedAt
+
+  @@id(fields: [movie_id, actor_id])
+}
+
+model Person {
+  tmdb_id      String        @id
+  name         String
+  profile_path String?
+  movies       MovieCredit[]
 }

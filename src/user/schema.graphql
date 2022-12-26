@@ -1,4 +1,5 @@
-#import Movie from '../movie/movie.graphql'
+#import Movie from '../movie/schema.graphql'
+#import MovieSortParams from '../movie/schema.graphql'
 #import PaginationParams from '../graphql/pagination.graphql'
 #import PageInfo from '../graphql/pagination.graphql'
 
@@ -13,13 +14,19 @@ type WatchedMovieEdge {
   cursor: String!
 }
 
+input WatchedMoviesParams {
+  pagination: PaginationParams
+  sorting: MovieSortParams
+}
+
 type User {
   id: ID!
   username: String!
+  watchedMovies(params: WatchedMoviesParams): WatchedMoviesConnection
 }
 
 input UserFetchParams {
-  id: ID!
+  userId: ID!
 }
 
 input MarkWatchedMovieParams {
@@ -38,7 +45,6 @@ input CreateUserParams {
 
 extend type Query {
   fetchUser(params: UserFetchParams!): User
-  listWatchedMovies(params: MovieListParams!): WatchedMoviesConnection!
 }
 
 extend type Mutation {

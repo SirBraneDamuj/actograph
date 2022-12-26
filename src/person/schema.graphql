@@ -1,0 +1,45 @@
+#import Movie from '../movie/schema.graphql';
+#import PageInfo from '../graphql/pagination.graphql'
+
+type Person {
+  tmdbId: String!
+  name: String!
+  profilePath: String
+  movies: StarredInConnection
+}
+
+extend type Movie {
+  credits: CreditsConnection
+}
+
+type CreditsConnection {
+  totalCount: Int!
+  edges: [CreditsEdge!]!
+  pageInfo: PageInfo
+}
+
+type CreditsEdge {
+  node: Person!
+  cursor: String!
+  characterName: String
+}
+
+type StarredInConnection {
+  totalCount: Int!
+  edges: [StarredInEdge!]!
+  pageInfo: PageInfo
+}
+
+type StarredInEdge {
+  node: Movie!
+  cursor: String!
+  characterName: String
+}
+
+input PersonFetchParams {
+  tmdbId: String!
+}
+
+extend type Query {
+  fetchPerson(params: PersonFetchParams!): Person
+}

@@ -1,0 +1,33 @@
+#import SortDirection from '../graphql/pagination.graphql'
+
+type Movie {
+  tmdbId: String!
+  title: String!
+  posterPath: String
+}
+
+enum MovieSortField {
+  updated_at
+  title
+}
+
+input MovieSortParams {
+  sortBy: MovieSortField!
+  direction: SortDirection!
+}
+
+input FetchMovieParams {
+  tmdbId: String!
+}
+
+input ImportMovieParams {
+  tmdbId: String!
+}
+
+extend type Query {
+  fetchMovie(params: FetchMovieParams!): Movie
+}
+
+extend type Mutation {
+  importMovie(params: ImportMovieParams!): Movie
+}

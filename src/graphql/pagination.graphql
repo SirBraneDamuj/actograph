@@ -1,8 +1,16 @@
 input PaginationParams {
-  first: Int
+  first: Int!
   after: String
-  previous: Int
-  before: String
+}
+
+enum SortDirection {
+  asc
+  desc
+}
+
+input SortParams {
+  sortBy: String!
+  sortDirection: SortDirection!
 }
 
 type PageInfo {
