@@ -43,44 +43,18 @@ const resolvers: Resolvers = {
         direction: params?.sorting?.direction || SortDirection.Desc,
         by: params?.sorting?.by || WatchedMovieSortField.WatchDate,
       };
-      const pageParams = params?.pagination || {
+      const pageParams = {
         first: params?.pagination?.first || 15,
-        after: params?.pagination?.after || undefined,
+        after: params?.pagination?.after || null,
       };
-      const userMovies = await db.userMovie.findMany({
-        ...paginationQueryParams(id, pageParams, sortParams.by),
-        orderBy: userMovieOrderBy(sortParams),
-        where: {
-          user_id: id,
-        },
-        include: {
-          movie: true,
-        },
-      });
-      const [{ _count, _min, _max }] = await db.userMovie.groupBy({
-        by: ["user_id"],
-        _min: {
-          updated_at: true,
-        },
-        _max: {
-          updated_at: true,
-        },
-        _count: true,
+      const userMovies = await userMovieQuery(id, pageParams, sortParams);
+      const count = await db.userMovie.count({
         where: {
           user_id: id,
         },
       });
-      const lastUserMovieCursor =
-        userMovies.length > 0
-          ? userMovies[userMovies.length - 1].updated_at
-          : null;
-      const hasNextPage =
-        lastUserMovieCursor &&
-        (sortParams.direction === "desc"
-          ? _min.updated_at && lastUserMovieCursor > _min.updated_at
-          : _max.updated_at && lastUserMovieCursor < _max.updated_at);
       return {
-        totalCount: _count,
+        totalCount: count,
         edges: userMovies.map((userMovie) => ({
           cursor: userMovieCursor(userMovie, sortParams.by),
           node: {
@@ -90,7 +64,6 @@ const resolvers: Resolvers = {
           },
         })),
         pageInfo: {
-          hasNextPage: !!hasNextPage,
           endCursor: userMovieCursor(
             userMovies[userMovies.length - 1],
             sortParams.by,
@@ -101,62 +74,63 @@ const resolvers: Resolvers = {
   },
 };
 
-function paginationQueryParams(
+async function userMovieQuery(
   userId: string,
-  paginationParams: { after?: string | null | undefined; first: number },
-  field: WatchedMovieSortField,
+  pageParams: { after: string | null | undefined; first: number },
+  sortParams: {
+    by: WatchedMovieSortField;
+    direction: SortDirection;
+  },
 ) {
-  return {
-    take: paginationParams.first,
-    skip: paginationParams?.after ? 1 : 0,
-    cursor: cursorQuery(userId, paginationParams, field) || undefined,
+  const base = {
+    take: pageParams.first,
+    skip: pageParams?.after ? 1 : 0, // skips the cursor
+    where: {
+      user_id: userId,
+    },
+    include: {
+      movie: true,
+    },
   };
-}
-
-function cursorQuery(
-  userId: string,
-  paginationParams: { after?: string | null | undefined; first: number },
-  field: WatchedMovieSortField,
-) {
-  if (!paginationParams.after) {
-    return null;
-  }
-  switch (field) {
-    case WatchedMovieSortField.WatchDate:
-      return {
-        user_id_updated_at: {
-          user_id: userId,
-          updated_at: paginationParams.after,
-        },
-      };
-    case WatchedMovieSortField.Title:
-      return {
-        movie: {
-          title_cursor: paginationParams.after,
-        },
-      };
-  }
-}
-
-function userMovieOrderBy(sortParams: {
-  by: WatchedMovieSortField;
-  direction: SortDirection;
-}) {
   const actualSortDirection =
     sortParams.direction === SortDirection.Desc
       ? ("desc" as const)
       : ("asc" as const);
+  const operator = sortParams.direction === SortDirection.Desc ? "lte" : "gte";
   switch (sortParams.by) {
-    case WatchedMovieSortField.WatchDate:
-      return {
-        updated_at: actualSortDirection,
-      };
     case WatchedMovieSortField.Title:
-      return {
-        movie: {
-          title_cursor: actualSortDirection,
+      return db.userMovie.findMany({
+        ...base,
+        where: pageParams?.after
+          ? {
+              movie: {
+                title_cursor: {
+                  [operator]: pageParams.after,
+                },
+              },
+            }
+          : undefined,
+        orderBy: {
+          movie: {
+            title_cursor: actualSortDirection,
+          },
         },
-      };
+      });
+    case WatchedMovieSortField.WatchDate:
+      return db.userMovie.findMany({
+        ...base,
+        cursor: pageParams?.after
+          ? {
+              user_id_updated_at: {
+                user_id: userId,
+                updated_at: pageParams.after,
+              },
+            }
+          : undefined,
+        orderBy: {
+          updated_at: actualSortDirection,
+        },
+      });
   }
 }
 
