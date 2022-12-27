@@ -1,15 +1,3 @@
-.MovieCard {
-  display: inline-block;
-  margin-right: 5px;
-  width: 100px;
-}
-
-.MovieCard .poster {
-  text-align: center;
-}
-
-.MovieCard .title {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.MovieCardTitle {
+  font-size: 12px;
 }

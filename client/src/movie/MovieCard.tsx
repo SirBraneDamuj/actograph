@@ -1,3 +1,4 @@
+import { Card } from "antd";
 import "./MovieCard.css";
 
 type MovieCardProps = {
@@ -11,31 +12,24 @@ export default function MovieCard({
   title,
   posterPath,
 }: MovieCardProps) {
-  function poster() {
-    if (posterPath) {
-      return (
+  return (
+    <Card
+      hoverable
+      style={{ width: 175, display: "inline-block", margin: 5 }}
+      cover={
         <img
-          src={`https://www.themoviedb.org/t/p/w92/${posterPath}`}
+          src={`https://www.themoviedb.org/t/p/w154/${posterPath}`}
           alt={`Poster for ${title}`}
           className="poster"
         ></img>
-      );
-    } else {
-      return null;
-    }
-  }
-  return (
-    <div className="MovieCard">
-      <div className="title">
-        <a
-          href={`https://themoviedb.org/movie/${tmdbId}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {title}
-        </a>
-      </div>
-      {poster()}
-    </div>
+      }
+      onClick={() =>
+        window.open(`https://www.themoviedb.org/movie/${tmdbId}`, "_blank")
+      }
+    >
+      <Card.Meta
+        title={<div className="MovieCardTitle">{title}</div>}
+      ></Card.Meta>
+    </Card>
   );
 }

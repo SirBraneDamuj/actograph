@@ -45,27 +45,29 @@ export default function Home() {
   function greeting() {
     if (loading) {
       return null;
-    } else {
-      return <h2>Hello, {data.fetchUser.username}!</h2>;
     }
+    return <h2>Hello, {data.fetchUser.username}!</h2>;
   }
   function stats() {
     if (loading) {
       return <div>Loading...</div>;
-    } else {
-      return (
-        <div>
-          <div>Total Movies: {data.fetchUser.watchedMovies.totalCount}</div>
-        </div>
-      );
     }
+    return (
+      <div>
+        <div>Total Movies: {data.fetchUser.watchedMovies.totalCount}</div>
+      </div>
+    );
   }
   function movieGrid() {
+    if (loading) {
+      return null;
+    }
     return data.fetchUser.watchedMovies.edges.map((edge: any) => (
       <MovieCard
         tmdbId={edge.node.tmdbId}
         title={edge.node.title}
         posterPath={edge.node.posterPath}
+        key={edge.node.tmdbId}
       ></MovieCard>
     ));
   }
