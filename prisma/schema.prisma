@@ -18,12 +18,14 @@ model User {
 }
 
 model Movie {
-  tmdbId      String        @id
-  title       String
-  poster_path String?
-  updated_at  DateTime      @updatedAt
-  watchers    UserMovie[]   @relation("WatchedMovie")
-  credits     MovieCredit[]
+  tmdbId       String        @id
+  title        String
+  title_cursor String        @unique
+  year         Int
+  poster_path  String?
+  updated_at   DateTime      @updatedAt
+  watchers     UserMovie[]   @relation("WatchedMovie")
+  credits      MovieCredit[]
 }
 
 model UserMovie {

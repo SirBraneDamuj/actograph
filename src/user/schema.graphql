@@ -14,8 +14,14 @@ type WatchedMovieEdge {
   cursor: String!
 }
 
+enum WatchedMovieSortField {
+  WATCH_DATE
+  TITLE
+}
+
 input WatchedMovieSortParams {
   direction: SortDirection
+  by: WatchedMovieSortField
 }
 
 input WatchedMoviesParams {

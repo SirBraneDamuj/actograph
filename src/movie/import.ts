@@ -1,4 +1,5 @@
 import { Movie } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 import db from "../db/index.js";
 import Tmdb from "../tmdb.js";
 
@@ -19,11 +20,17 @@ export async function importMovie(tmdbId: string): Promise<Movie | null> {
   if (!movieCredits) {
     return null;
   }
+  const title = loadedMovie.title || "Somehow this doesn't have a title"; // TODO: how can I more safely handle these responses
+  const year = loadedMovie.release_date
+    ? new Date(loadedMovie.release_date).getFullYear()
+    : 0;
   const newMovie = await db.movie.create({
     data: {
       tmdbId: loadedMovie.id.toString(),
-      title: loadedMovie.title || "Somehow this doesn't have a title", // TODO: how can I more safely handle these responses
+      title,
+      title_cursor: `${title}_${year}_${uuidv4()}`,
       poster_path: loadedMovie.poster_path,
+      year,
       credits: {
         create: movieCredits.map((cast) => ({
           character_name: cast.character || "N/A",

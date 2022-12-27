@@ -1,6 +1,10 @@
 import { Movie, UserMovie } from "@prisma/client";
 import db from "../db/index.js";
-import { Resolvers } from "../__generated__/resolvers-types.js";
+import {
+  Resolvers,
+  SortDirection,
+  WatchedMovieSortField,
+} from "../__generated__/resolvers-types.js";
 import { watchMovie } from "./watch.js";
 
 const resolvers: Resolvers = {
@@ -36,31 +40,16 @@ const resolvers: Resolvers = {
   User: {
     watchedMovies: async ({ id }, { params }, _context: unknown) => {
       const sortParams = {
-        direction: "desc",
-        ...params?.sorting,
+        direction: params?.sorting?.direction || SortDirection.Desc,
+        by: params?.sorting?.by || WatchedMovieSortField.WatchDate,
       };
-      const paginationParams = params?.pagination || {
-        first: 15,
-        after: null,
-        ...params?.pagination,
+      const pageParams = params?.pagination || {
+        first: params?.pagination?.first || 15,
+        after: params?.pagination?.after || undefined,
       };
       const userMovies = await db.userMovie.findMany({
-        take: paginationParams.first,
-        skip: paginationParams?.after ? 1 : 0,
-        cursor: paginationParams?.after
-          ? {
-              user_id_updated_at: {
-                user_id: id,
-                updated_at: paginationParams.after,
-              },
-            }
-          : undefined,
-        orderBy: {
-          updated_at:
-            sortParams.direction === "desc"
-              ? ("desc" as const)
-              : ("asc" as const),
-        },
+        ...paginationQueryParams(id, pageParams, sortParams.by),
+        orderBy: userMovieOrderBy(sortParams),
         where: {
           user_id: id,
         },
@@ -93,7 +82,7 @@ const resolvers: Resolvers = {
       return {
         totalCount: _count,
         edges: userMovies.map((userMovie) => ({
-          cursor: userMovieCursor(userMovie),
+          cursor: userMovieCursor(userMovie, sortParams.by),
           node: {
             title: userMovie.movie.title,
             tmdbId: userMovie.movie.tmdbId,
@@ -102,15 +91,85 @@ const resolvers: Resolvers = {
         })),
         pageInfo: {
           hasNextPage: !!hasNextPage,
-          endCursor: userMovieCursor(userMovies[userMovies.length - 1]),
+          endCursor: userMovieCursor(
+            userMovies[userMovies.length - 1],
+            sortParams.by,
+          ),
         },
       };
     },
   },
 };
 
-function userMovieCursor(userMovie: UserMovie & { movie: Movie }): string {
-  return userMovie.updated_at.toISOString();
+function paginationQueryParams(
+  userId: string,
+  paginationParams: { after?: string | null | undefined; first: number },
+  field: WatchedMovieSortField,
+) {
+  return {
+    take: paginationParams.first,
+    skip: paginationParams?.after ? 1 : 0,
+    cursor: cursorQuery(userId, paginationParams, field) || undefined,
+  };
+}
+
+function cursorQuery(
+  userId: string,
+  paginationParams: { after?: string | null | undefined; first: number },
+  field: WatchedMovieSortField,
+) {
+  if (!paginationParams.after) {
+    return null;
+  }
+  switch (field) {
+    case WatchedMovieSortField.WatchDate:
+      return {
+        user_id_updated_at: {
+          user_id: userId,
+          updated_at: paginationParams.after,
+        },
+      };
+    case WatchedMovieSortField.Title:
+      return {
+        movie: {
+          title_cursor: paginationParams.after,
+        },
+      };
+  }
+}
+
+function userMovieOrderBy(sortParams: {
+  by: WatchedMovieSortField;
+  direction: SortDirection;
+}) {
+  const actualSortDirection =
+    sortParams.direction === SortDirection.Desc
+      ? ("desc" as const)
+      : ("asc" as const);
+  switch (sortParams.by) {
+    case WatchedMovieSortField.WatchDate:
+      return {
+        updated_at: actualSortDirection,
+      };
+    case WatchedMovieSortField.Title:
+      return {
+        movie: {
+          title_cursor: actualSortDirection,
+        },
+      };
+  }
+}
+
+function userMovieCursor(
+  userMovie: UserMovie & { movie: Movie },
+  field: WatchedMovieSortField,
+): string {
+  switch (field) {
+    case WatchedMovieSortField.Title:
+      return userMovie.movie.title_cursor;
+    case WatchedMovieSortField.WatchDate:
+      return userMovie.updated_at.toISOString();
+  }
 }
 
 export default resolvers;
