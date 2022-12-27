@@ -6,16 +6,6 @@ type Movie {
   posterPath: String
 }
 
-enum MovieSortField {
-  updated_at
-  title
-}
-
-input MovieSortParams {
-  sortBy: MovieSortField!
-  direction: SortDirection!
-}
-
 input FetchMovieParams {
   tmdbId: String!
 }

@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id            String      @id @default(uuid()) @db.Uuid
-  username      String
+  username      String      @unique
   updated_at    DateTime    @updatedAt
   watchedMovies UserMovie[] @relation("MovieViewer")
 }
@@ -34,6 +34,7 @@ model UserMovie {
   updated_at DateTime @updatedAt
 
   @@id(fields: [user_id, movie_id])
+  @@unique(fields: [user_id, updated_at])
 }
 
 model MovieCredit {

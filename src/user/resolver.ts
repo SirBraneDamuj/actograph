@@ -1,6 +1,7 @@
+import { Movie, UserMovie } from "@prisma/client";
 import db from "../db/index.js";
-import { importMovie } from "../movie/import.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
+import { watchMovie } from "./watch.js";
 
 const resolvers: Resolvers = {
   Query: {
@@ -22,17 +23,8 @@ const resolvers: Resolvers = {
       { params },
       _context: unknown,
     ) => {
-      const movie = await importMovie(params.tmdbId);
-      if (!movie) {
-        throw new Error(`Could not import movie with ID ${params.tmdbId}`);
-      }
-      await db.userMovie.create({
-        data: {
-          movie_id: movie.tmdbId,
-          user_id: params.userId,
-        },
-      });
-      return movie;
+      // TODO do more here
+      return watchMovie(params.userId, params.tmdbId);
     },
     createUser: async (_parent: unknown, { params }, _context: unknown) => {
       const user = await db.user.create({
@@ -44,8 +36,7 @@ const resolvers: Resolvers = {
   User: {
     watchedMovies: async ({ id }, { params }, _context: unknown) => {
       const sortParams = {
-        sortBy: "updated_at",
-        sortDirection: "desc",
+        direction: "desc",
         ...params?.sorting,
       };
       const paginationParams = params?.pagination || {
@@ -55,11 +46,20 @@ const resolvers: Resolvers = {
       };
       const userMovies = await db.userMovie.findMany({
         take: paginationParams.first,
+        skip: paginationParams?.after ? 1 : 0,
         cursor: paginationParams?.after
-          ? { [sortParams.sortBy]: paginationParams.after }
+          ? {
+              user_id_updated_at: {
+                user_id: id,
+                updated_at: paginationParams.after,
+              },
+            }
           : undefined,
         orderBy: {
-          [sortParams.sortBy]: sortParams.sortDirection,
+          updated_at:
+            sortParams.direction === "desc"
+              ? ("desc" as const)
+              : ("asc" as const),
         },
         where: {
           user_id: id,
@@ -68,15 +68,32 @@ const resolvers: Resolvers = {
           movie: true,
         },
       });
-      const count = await db.userMovie.count({
+      const [{ _count, _min, _max }] = await db.userMovie.groupBy({
+        by: ["user_id"],
+        _min: {
+          updated_at: true,
+        },
+        _max: {
+          updated_at: true,
+        },
+        _count: true,
         where: {
           user_id: id,
         },
       });
+      const lastUserMovieCursor =
+        userMovies.length > 0
+          ? userMovies[userMovies.length - 1].updated_at
+          : null;
+      const hasNextPage =
+        lastUserMovieCursor &&
+        (sortParams.direction === "desc"
+          ? _min.updated_at && lastUserMovieCursor > _min.updated_at
+          : _max.updated_at && lastUserMovieCursor < _max.updated_at);
       return {
-        totalCount: count,
+        totalCount: _count,
         edges: userMovies.map((userMovie) => ({
-          cursor: "",
+          cursor: userMovieCursor(userMovie),
           node: {
             title: userMovie.movie.title,
             tmdbId: userMovie.movie.tmdbId,
@@ -84,14 +101,16 @@ const resolvers: Resolvers = {
           },
         })),
         pageInfo: {
-          hasNextPage: false,
-          hasPrevPage: false,
-          endCursor: "",
-          firstCursor: "",
+          hasNextPage: !!hasNextPage,
+          endCursor: userMovieCursor(userMovies[userMovies.length - 1]),
         },
       };
     },
   },
 };
+
+function userMovieCursor(userMovie: UserMovie & { movie: Movie }): string {
+  return userMovie.updated_at.toISOString();
+}
 
 export default resolvers;

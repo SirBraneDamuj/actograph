@@ -1,6 +1,6 @@
 #import Movie from '../movie/schema.graphql'
-#import MovieSortParams from '../movie/schema.graphql'
 #import PaginationParams from '../graphql/pagination.graphql'
+#import SortDirection from '../graphql/pagination.graphql'
 #import PageInfo from '../graphql/pagination.graphql'
 
 type WatchedMoviesConnection {
@@ -14,9 +14,13 @@ type WatchedMovieEdge {
   cursor: String!
 }
 
+input WatchedMovieSortParams {
+  direction: SortDirection
+}
+
 input WatchedMoviesParams {
   pagination: PaginationParams
-  sorting: MovieSortParams
+  sorting: WatchedMovieSortParams
 }
 
 type User {

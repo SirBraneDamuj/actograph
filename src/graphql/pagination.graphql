@@ -16,6 +16,4 @@ input SortParams {
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
-  firstCursor: String
-  hasPrevPage: Boolean!
 }

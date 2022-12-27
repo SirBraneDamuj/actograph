@@ -53,8 +53,6 @@ const resolvers: Resolvers = {
         })),
         pageInfo: {
           hasNextPage: false,
-          hasPrevPage: false,
-          firstCursor: "",
           endCursor: "",
         },
       };
