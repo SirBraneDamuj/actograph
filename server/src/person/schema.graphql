@@ -8,8 +8,12 @@ type Person {
   movies: StarredInConnection
 }
 
+input MovieCreditsParams {
+  userId: ID!
+}
+
 extend type Movie {
-  credits: CreditsConnection
+  credits(params: MovieCreditsParams): CreditsConnection
 }
 
 type CreditsConnection {

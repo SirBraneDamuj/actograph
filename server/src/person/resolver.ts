@@ -17,7 +17,10 @@ const resolvers: Resolvers = {
     },
   },
   Person: {
-    movies: async ({ tmdbId }, _params: unknown, _context: unknown) => {
+    movies: async ({ tmdbId, movies }, _params: unknown, _context: unknown) => {
+      if (movies !== null && movies !== undefined) {
+        return movies;
+      }
       const movieCredits = await db.movieCredit.findMany({
         where: {
           actor_id: tmdbId,
