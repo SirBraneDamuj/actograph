@@ -4,6 +4,7 @@ import Menu from "antd/es/menu";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Home from "./home/Home";
+import Login from "./login/Login";
 import Watch from "./watch/Watch";
 
 const menuItems = [
@@ -15,6 +16,10 @@ const menuItems = [
     label: <Link to={"/watch"}>Watch</Link>,
     key: "watch",
   },
+  {
+    label: <Link to={"/login"}>Login</Link>,
+    key: "login",
+  },
 ];
 
 function App() {
@@ -22,12 +27,13 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Header>
-          <Menu mode="horizontal" items={menuItems}></Menu>
+          <Menu theme="light" mode="horizontal" items={menuItems}></Menu>
         </Header>
-        <Content>
+        <Content style={{ padding: 10 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/watch" element={<Watch />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </Content>
       </Layout>

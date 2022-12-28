@@ -1,4 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
+import useUserId from "../login/useUserId";
 import MovieCard from "../movie/MovieCard";
 import "./Home.css";
 
@@ -25,8 +26,9 @@ const GET_USER = gql`
 `;
 
 export default function Home() {
-  const userId = "49480f48-2a51-4e74-9af6-58b8b6fda848";
+  const userId = useUserId();
   const { loading, data } = useQuery(GET_USER, {
+    skip: !userId,
     variables: {
       params: {
         userId,
@@ -71,6 +73,7 @@ export default function Home() {
       ></MovieCard>
     ));
   }
+  if (!userId) return null;
   return (
     <div className="Home">
       <h1>Actograph</h1>

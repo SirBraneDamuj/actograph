@@ -28,7 +28,15 @@ const resolvers: Resolvers = {
       _context: unknown,
     ) => {
       // TODO do more here
-      return watchMovie(params.userId, params.tmdbId);
+      const { title, poster_path, tmdbId } = await watchMovie(
+        params.userId,
+        params.tmdbId,
+      );
+      return {
+        tmdbId,
+        title: title,
+        posterPath: poster_path,
+      };
     },
     createUser: async (_parent: unknown, { params }, _context: unknown) => {
       const user = await db.user.create({

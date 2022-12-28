@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { UserContextProvider } from "./provider/UserContextProvider";
 
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 
@@ -15,8 +16,10 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <ApolloProvider client={client}>
-      <App />
-    </ApolloProvider>
+    <UserContextProvider>
+      <ApolloProvider client={client}>
+        <App />
+      </ApolloProvider>
+    </UserContextProvider>
   </React.StrictMode>
 );
