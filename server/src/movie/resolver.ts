@@ -4,12 +4,16 @@ import { importMovie } from "./import.js";
 
 const resolvers: Resolvers = {
   Query: {
-    fetchMovie: (_parent: unknown, { params }, _context: unknown) => {
-      return db.movie.findUnique({
-        where: {
-          tmdbId: params.tmdbId,
-        },
-      });
+    fetchMovie: async (_parent: unknown, { params }, _context: unknown) => {
+      const importedMovie = await importMovie(params.tmdbId);
+      if (!importedMovie) {
+        throw new Error(`Failed to import movie :( ${params.tmdbId}`);
+      }
+      return {
+        tmdbId: importedMovie.tmdbId,
+        posterPath: importedMovie.poster_path,
+        title: importedMovie.title,
+      };
     },
   },
   Mutation: {

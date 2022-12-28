@@ -5,6 +5,7 @@ import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Home from "./home/Home";
 import Login from "./login/Login";
+import { MovieDetails } from "./movie/MovieDetails";
 import Watch from "./watch/Watch";
 
 const menuItems = [
@@ -33,6 +34,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/watch" element={<Watch />} />
+            <Route path="/watch/movie/:tmdbId" element={<MovieDetails />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </Content>
