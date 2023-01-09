@@ -12,6 +12,7 @@ type WatchedMoviesConnection {
 type WatchedMovieEdge {
   node: Movie!
   cursor: String!
+  watchTimestamp: String!
 }
 
 enum WatchedMovieSortField {
@@ -29,6 +30,11 @@ input WatchedMoviesParams {
   sorting: WatchedMovieSortParams
 }
 
+input FetchWatchedMovieParams {
+  tmdbId: String!
+  userId: ID!
+}
+
 type User {
   id: ID!
   username: String!
@@ -39,9 +45,10 @@ input UserFetchParams {
   userId: ID!
 }
 
-input MarkWatchedMovieParams {
+input SetWatchStatusForUserParams {
   userId: ID!
   tmdbId: String!
+  watched: Boolean!
 }
 
 input MovieListParams {
@@ -55,9 +62,10 @@ input CreateUserParams {
 
 extend type Query {
   fetchUser(params: UserFetchParams!): User
+  fetchWatchedMovie(params: FetchWatchedMovieParams!): WatchedMovieEdge
 }
 
 extend type Mutation {
-  markWatchedMovie(params: MarkWatchedMovieParams!): Movie
+  setWatchStatusForUser(params: SetWatchStatusForUserParams!): Movie
   createUser(params: CreateUserParams!): User!
 }
