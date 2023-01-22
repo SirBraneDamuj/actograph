@@ -8,7 +8,25 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 
 const client = new ApolloClient({
   uri: "http://localhost:4000/",
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          fetchWatchedMovies: {
+            keyArgs: ["userId"],
+            merge: (existing, incoming) => {
+              console.log(existing, incoming);
+              return {
+                totalCount: incoming.totalCount,
+                pageInfo: incoming.pageInfo,
+                edges: [...(existing?.edges || []), ...incoming.edges],
+              };
+            },
+          },
+        },
+      },
+    },
+  }),
 });
 
 const root = ReactDOM.createRoot(

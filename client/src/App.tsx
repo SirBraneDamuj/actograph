@@ -3,6 +3,7 @@ import { Content, Header } from "antd/es/layout/layout";
 import Menu from "antd/es/menu";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import "./App.css";
+import { History } from "./history/History";
 import Home from "./home/Home";
 import Login from "./login/Login";
 import { MovieDetails } from "./movie/MovieDetails";
@@ -12,6 +13,10 @@ const menuItems = [
   {
     label: <Link to={"/"}>Home</Link>,
     key: "home",
+  },
+  {
+    label: <Link to={"/history"}>History</Link>,
+    key: "history",
   },
   {
     label: <Link to={"/watch"}>Watch</Link>,
@@ -33,6 +38,7 @@ function App() {
         <Content style={{ padding: 10 }}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/history" element={<History />} />
             <Route path="/watch" element={<Watch />} />
             <Route path="/watch/movie/:tmdbId" element={<MovieDetails />} />
             <Route path="/login" element={<Login />} />

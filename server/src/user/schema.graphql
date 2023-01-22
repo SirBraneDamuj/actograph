@@ -63,6 +63,10 @@ input CreateUserParams {
 extend type Query {
   fetchUser(params: UserFetchParams!): User
   fetchWatchedMovie(params: FetchWatchedMovieParams!): WatchedMovieEdge
+  fetchWatchedMovies(
+    userId: ID!
+    params: WatchedMoviesParams!
+  ): WatchedMoviesConnection!
 }
 
 extend type Mutation {

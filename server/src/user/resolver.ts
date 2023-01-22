@@ -3,9 +3,51 @@ import db from "../db/index.js";
 import {
   Resolvers,
   SortDirection,
+  WatchedMoviesConnection,
   WatchedMovieSortField,
+  WatchedMoviesParams,
 } from "../__generated__/resolvers-types.js";
 import { unwatchMovie, watchMovie } from "./watch.js";
+
+async function watchedMoviesResolver(
+  userId: string,
+  params: WatchedMoviesParams,
+): Promise<WatchedMoviesConnection> {
+  const sortParams = {
+    direction: params?.sorting?.direction || SortDirection.Desc,
+    by: params?.sorting?.by || WatchedMovieSortField.WatchDate,
+  };
+  const pageParams = {
+    first: params?.pagination?.first || 15,
+    after: params?.pagination?.after || null,
+  };
+  const userMovies = await userMovieQuery(userId, pageParams, sortParams);
+  const count = await db.userMovie.count({
+    where: {
+      user_id: userId,
+    },
+  });
+  return {
+    totalCount: count,
+    edges: userMovies.map((userMovie) => ({
+      cursor: userMovieCursor(userMovie, sortParams.by),
+      watchTimestamp: userMovie.updated_at.toISOString(),
+      node: {
+        title: userMovie.movie.title,
+        tmdbId: userMovie.movie.tmdbId,
+        posterPath: userMovie.movie.poster_path,
+      },
+    })),
+    pageInfo: {
+      endCursor:
+        userMovies.length > 0
+          ? userMovieCursor(userMovies[userMovies.length - 1], sortParams.by)
+          : undefined,
+      // TODO: this is technically incorrect
+      hasNextPage: userMovies.length > 0,
+    },
+  };
+}
 
 const resolvers: Resolvers = {
   Query: {
@@ -49,6 +91,11 @@ const resolvers: Resolvers = {
         },
       };
     },
+    fetchWatchedMovies: async (
+      _parent: unknown,
+      { userId, params },
+      _context: unknown,
+    ) => watchedMoviesResolver(userId, params),
   },
   Mutation: {
     setWatchStatusForUser: async (
@@ -80,40 +127,8 @@ const resolvers: Resolvers = {
     },
   },
   User: {
-    watchedMovies: async ({ id }, { params }, _context: unknown) => {
-      const sortParams = {
-        direction: params?.sorting?.direction || SortDirection.Desc,
-        by: params?.sorting?.by || WatchedMovieSortField.WatchDate,
-      };
-      const pageParams = {
-        first: params?.pagination?.first || 15,
-        after: params?.pagination?.after || null,
-      };
-      const userMovies = await userMovieQuery(id, pageParams, sortParams);
-      const count = await db.userMovie.count({
-        where: {
-          user_id: id,
-        },
-      });
-      return {
-        totalCount: count,
-        edges: userMovies.map((userMovie) => ({
-          cursor: userMovieCursor(userMovie, sortParams.by),
-          watchTimestamp: userMovie.updated_at.toISOString(),
-          node: {
-            title: userMovie.movie.title,
-            tmdbId: userMovie.movie.tmdbId,
-            posterPath: userMovie.movie.poster_path,
-          },
-        })),
-        pageInfo: {
-          endCursor: userMovieCursor(
-            userMovies[userMovies.length - 1],
-            sortParams.by,
-          ),
-        },
-      };
-    },
+    watchedMovies: async ({ id }, { params }, _context: unknown) =>
+      watchedMoviesResolver(id, params || {}),
   },
 };
 
