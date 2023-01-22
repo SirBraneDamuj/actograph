@@ -1,5 +1,5 @@
 import db from "../db/index.js";
-import { watchMovie } from "../user/watch.js";
+import { watchMovie } from "../userMovie/watch.js";
 
 const { id: userId } = await db.user.upsert({
   create: {

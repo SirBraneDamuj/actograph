@@ -1,54 +1,10 @@
-#import Movie from '../movie/schema.graphql'
-#import PaginationParams from '../graphql/pagination.graphql'
-#import SortDirection from '../graphql/pagination.graphql'
-#import PageInfo from '../graphql/pagination.graphql'
-
-type WatchedMoviesConnection {
-  totalCount: Int!
-  edges: [WatchedMovieEdge!]!
-  pageInfo: PageInfo
-}
-
-type WatchedMovieEdge {
-  node: Movie!
-  cursor: String!
-  watchTimestamp: String!
-}
-
-enum WatchedMovieSortField {
-  WATCH_DATE
-  TITLE
-}
-
-input WatchedMovieSortParams {
-  direction: SortDirection
-  by: WatchedMovieSortField
-}
-
-input WatchedMoviesParams {
-  pagination: PaginationParams
-  sorting: WatchedMovieSortParams
-}
-
-input FetchWatchedMovieParams {
-  tmdbId: String!
-  userId: ID!
-}
-
 type User {
   id: ID!
   username: String!
-  watchedMovies(params: WatchedMoviesParams): WatchedMoviesConnection
 }
 
 input UserFetchParams {
   userId: ID!
-}
-
-input SetWatchStatusForUserParams {
-  userId: ID!
-  tmdbId: String!
-  watched: Boolean!
 }
 
 input MovieListParams {
@@ -62,14 +18,8 @@ input CreateUserParams {
 
 extend type Query {
   fetchUser(params: UserFetchParams!): User
-  fetchWatchedMovie(params: FetchWatchedMovieParams!): WatchedMovieEdge
-  fetchWatchedMovies(
-    userId: ID!
-    params: WatchedMoviesParams!
-  ): WatchedMoviesConnection!
 }
 
 extend type Mutation {
-  setWatchStatusForUser(params: SetWatchStatusForUserParams!): Movie
   createUser(params: CreateUserParams!): User!
 }

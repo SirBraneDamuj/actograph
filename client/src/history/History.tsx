@@ -15,7 +15,9 @@ const GET_USER = gql`
         }
       }
       pageInfo {
+        firstCursor
         endCursor
+        hasPrevPage
         hasNextPage
       }
     }

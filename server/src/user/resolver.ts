@@ -1,53 +1,5 @@
-import { Movie, UserMovie } from "@prisma/client";
 import db from "../db/index.js";
-import {
-  Resolvers,
-  SortDirection,
-  WatchedMoviesConnection,
-  WatchedMovieSortField,
-  WatchedMoviesParams,
-} from "../__generated__/resolvers-types.js";
-import { unwatchMovie, watchMovie } from "./watch.js";
-
-async function watchedMoviesResolver(
-  userId: string,
-  params: WatchedMoviesParams,
-): Promise<WatchedMoviesConnection> {
-  const sortParams = {
-    direction: params?.sorting?.direction || SortDirection.Desc,
-    by: params?.sorting?.by || WatchedMovieSortField.WatchDate,
-  };
-  const pageParams = {
-    first: params?.pagination?.first || 15,
-    after: params?.pagination?.after || null,
-  };
-  const userMovies = await userMovieQuery(userId, pageParams, sortParams);
-  const count = await db.userMovie.count({
-    where: {
-      user_id: userId,
-    },
-  });
-  return {
-    totalCount: count,
-    edges: userMovies.map((userMovie) => ({
-      cursor: userMovieCursor(userMovie, sortParams.by),
-      watchTimestamp: userMovie.updated_at.toISOString(),
-      node: {
-        title: userMovie.movie.title,
-        tmdbId: userMovie.movie.tmdbId,
-        posterPath: userMovie.movie.poster_path,
-      },
-    })),
-    pageInfo: {
-      endCursor:
-        userMovies.length > 0
-          ? userMovieCursor(userMovies[userMovies.length - 1], sortParams.by)
-          : undefined,
-      // TODO: this is technically incorrect
-      hasNextPage: userMovies.length > 0,
-    },
-  };
-}
+import { Resolvers } from "../__generated__/resolvers-types.js";
 
 const resolvers: Resolvers = {
   Query: {
@@ -62,63 +14,8 @@ const resolvers: Resolvers = {
       }
       return user;
     },
-    fetchWatchedMovie: async (
-      _parent: unknown,
-      { params },
-      _context: unknown,
-    ) => {
-      const userMovie = await db.userMovie.findUnique({
-        where: {
-          user_id_movie_id: {
-            user_id: params.userId,
-            movie_id: params.tmdbId,
-          },
-        },
-        include: {
-          movie: true,
-        },
-      });
-      if (!userMovie) {
-        return null;
-      }
-      return {
-        cursor: "",
-        watchTimestamp: userMovie.updated_at.toISOString(),
-        node: {
-          title: userMovie.movie.title,
-          tmdbId: userMovie.movie.tmdbId,
-          posterPath: userMovie.movie.poster_path,
-        },
-      };
-    },
-    fetchWatchedMovies: async (
-      _parent: unknown,
-      { userId, params },
-      _context: unknown,
-    ) => watchedMoviesResolver(userId, params),
   },
   Mutation: {
-    setWatchStatusForUser: async (
-      _parent: unknown,
-      { params },
-      _context: unknown,
-    ) => {
-      if (!params.watched) {
-        await unwatchMovie(params.userId, params.tmdbId);
-        return null;
-      } else {
-        // TODO do more here
-        const { title, poster_path, tmdbId } = await watchMovie(
-          params.userId,
-          params.tmdbId,
-        );
-        return {
-          tmdbId,
-          title: title,
-          posterPath: poster_path,
-        };
-      }
-    },
     createUser: async (_parent: unknown, { params }, _context: unknown) => {
       const user = await db.user.create({
         data: params,
@@ -126,82 +23,6 @@ const resolvers: Resolvers = {
       return user;
     },
   },
-  User: {
-    watchedMovies: async ({ id }, { params }, _context: unknown) =>
-      watchedMoviesResolver(id, params || {}),
-  },
 };
-
-async function userMovieQuery(
-  userId: string,
-  pageParams: { after: string | null | undefined; first: number },
-  sortParams: {
-    by: WatchedMovieSortField;
-    direction: SortDirection;
-  },
-) {
-  const base = {
-    take: pageParams.first,
-    skip: pageParams?.after ? 1 : 0, // skips the cursor
-    where: {
-      user_id: userId,
-    },
-    include: {
-      movie: true,
-    },
-  };
-  const actualSortDirection =
-    sortParams.direction === SortDirection.Desc
-      ? ("desc" as const)
-      : ("asc" as const);
-  const operator = sortParams.direction === SortDirection.Desc ? "lte" : "gte";
-  switch (sortParams.by) {
-    case WatchedMovieSortField.Title:
-      return db.userMovie.findMany({
-        ...base,
-        where: pageParams?.after
-          ? {
-              movie: {
-                title_cursor: {
-                  [operator]: pageParams.after,
-                },
-              },
-            }
-          : undefined,
-        orderBy: {
-          movie: {
-            title_cursor: actualSortDirection,
-          },
-        },
-      });
-    case WatchedMovieSortField.WatchDate:
-      return db.userMovie.findMany({
-        ...base,
-        cursor: pageParams?.after
-          ? {
-              user_id_updated_at: {
-                user_id: userId,
-                updated_at: pageParams.after,
-              },
-            }
-          : undefined,
-        orderBy: {
-          updated_at: actualSortDirection,
-        },
-      });
-  }
-}
-
-function userMovieCursor(
-  userMovie: UserMovie & { movie: Movie },
-  field: WatchedMovieSortField,
-): string {
-  switch (field) {
-    case WatchedMovieSortField.Title:
-      return userMovie.movie.title_cursor;
-    case WatchedMovieSortField.WatchDate:
-      return userMovie.updated_at.toISOString();
-  }
-}
 
 export default resolvers;
