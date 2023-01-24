@@ -23,6 +23,10 @@ const client = new ApolloClient({
               };
             },
           },
+          fetchMovie: {
+            keyArgs: false,
+            merge: false,
+          },
         },
       },
     },

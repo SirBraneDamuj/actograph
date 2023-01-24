@@ -1,98 +1,39 @@
-import { UserOutlined } from "@ant-design/icons";
-import { Avatar, Card, Space } from "antd";
+import { Col, Row } from "antd";
+import { CharacterCard, CharacterCardWithOtherAppearances } from "./PersonCard";
+import { PersonCastEdge } from "./types";
 
 export type CastListProps = {
-  cast: {
-    characterName: string;
-    node: {
-      tmdbId: string;
-      name: string;
-      profilePath: string;
-      movies: {
-        totalCount: number;
-        edges: {
-          characterName: string;
-          node: {
-            tmdbId: string;
-            title: string;
-            posterPath: string;
-          };
-        }[];
-      };
-    };
-  }[];
+  cast: PersonCastEdge[];
   showRelated: boolean;
 };
-
-function CastCard({
-  person,
-  showRelated,
-}: {
-  person: CastListProps["cast"][number];
-  showRelated: boolean;
-}) {
-  const { name, profilePath, tmdbId } = person.node;
-  const { characterName } = person;
-  function personAvatar() {
-    if (!profilePath) {
-      return <Avatar icon={<UserOutlined />} />;
-    } else {
-      return (
-        <Avatar src={`https://www.themoviedb.org/t/p/w185/${profilePath}`} />
-      );
-    }
-  }
-  function creditsCards() {
-    if (!showRelated) return null;
-    return person.node.movies.edges.map((otherMovie, i) => {
-      return (
-        <Card
-          style={{ width: 150 }}
-          key={`${otherMovie.node.tmdbId}_${i}`}
-          type="inner"
-          title={otherMovie.node.title}
-          cover={
-            <img
-              src={`https://www.themoviedb.org/t/p/w500/${otherMovie.node.posterPath}`}
-              alt={otherMovie.node.title}
-            />
-          }
-        >
-          <Card.Meta description={otherMovie.characterName} />
-        </Card>
-      );
-    });
-  }
-  return (
-    <Card
-      title={characterName}
-      extra={
-        <a
-          href={`https://www.themoviedb.org/person/${tmdbId}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          TMDB
-        </a>
-      }
-    >
-      <Space direction="vertical">
-        <Card.Meta avatar={personAvatar()} description={name} />
-        <Space>{creditsCards()}</Space>
-      </Space>
-    </Card>
-  );
-}
-
+const castListSpans = {
+  xs: 24,
+  sm: 12,
+  md: 8,
+  lg: 6,
+  xl: 4,
+  xxl: 4,
+};
 export function CastList({ cast, showRelated }: CastListProps) {
   function cards() {
-    return cast.map((person, i) => (
-      <CastCard
-        key={person.node.name + i.toString()}
-        person={person}
-        showRelated={showRelated}
-      />
-    ));
+    return cast.map((person, i) => {
+      if (showRelated) {
+        return (
+          <Col key={person.node.name + i.toString()} span={24}>
+            <CharacterCardWithOtherAppearances person={person} />
+          </Col>
+        );
+      } else {
+        return (
+          <Col key={person.node.name + i.toString()} {...castListSpans}>
+            <CharacterCard
+              key={person.node.name + i.toString()}
+              person={person}
+            />
+          </Col>
+        );
+      }
+    });
   }
-  return <Space direction="vertical">{cards()}</Space>;
+  return <Row gutter={[5, 5]}>{cards()}</Row>;
 }
