@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Header>
-          <Menu theme="light" mode="horizontal" items={menuItems}></Menu>
+          <Menu theme="dark" mode="horizontal" items={menuItems}></Menu>
         </Header>
         <Content style={{ padding: 10 }}>
           <Routes>
