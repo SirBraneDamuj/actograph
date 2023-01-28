@@ -19,12 +19,12 @@ export async function watchMovie(userId: string, tmdbId: string) {
   }
   await db.userMovie.upsert({
     create: {
-      movie_id: movie.tmdbId,
+      movie_id: movie.tmdb_id,
       user_id: userId,
     },
     where: {
       user_id_movie_id: {
-        movie_id: movie.tmdbId,
+        movie_id: movie.tmdb_id,
         user_id: userId,
       },
     },

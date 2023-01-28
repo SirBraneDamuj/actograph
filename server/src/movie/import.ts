@@ -6,7 +6,7 @@ import Tmdb from "../tmdb.js";
 export async function importMovie(tmdbId: string): Promise<Movie | null> {
   const existingMovie = await db.movie.findUnique({
     where: {
-      tmdbId,
+      tmdb_id: tmdbId,
     },
   });
   if (existingMovie) {
@@ -26,7 +26,7 @@ export async function importMovie(tmdbId: string): Promise<Movie | null> {
     : 0;
   const newMovie = await db.movie.create({
     data: {
-      tmdbId: loadedMovie.id.toString(),
+      tmdb_id: loadedMovie.id.toString(),
       title,
       title_cursor: `${title}_${year}_${uuidv4()}`,
       poster_path: loadedMovie.poster_path,

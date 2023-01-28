@@ -45,7 +45,7 @@ export async function watchedMoviesResolver(
       watchTimestamp: userMovie.updated_at.toISOString(),
       node: {
         title: userMovie.movie.title,
-        tmdbId: userMovie.movie.tmdbId,
+        tmdbId: userMovie.movie.tmdb_id,
         posterPath: userMovie.movie.poster_path,
       },
     })),
@@ -97,7 +97,7 @@ const userMovieResolvers: Resolvers = {
         watchTimestamp: userMovie.updated_at.toISOString(),
         node: {
           title: userMovie.movie.title,
-          tmdbId: userMovie.movie.tmdbId,
+          tmdbId: userMovie.movie.tmdb_id,
           posterPath: userMovie.movie.poster_path,
         },
       };
@@ -114,13 +114,13 @@ const userMovieResolvers: Resolvers = {
         return null;
       } else {
         // TODO do more here
-        const { title, poster_path, tmdbId } = await watchMovie(
+        const { title, poster_path, tmdb_id } = await watchMovie(
           params.userId,
           params.tmdbId,
         );
         return {
-          tmdbId,
-          title: title,
+          tmdbId: tmdb_id,
+          title,
           posterPath: poster_path,
         };
       }

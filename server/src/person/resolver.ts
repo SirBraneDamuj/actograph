@@ -40,7 +40,7 @@ const resolvers: Resolvers = {
           cursor: "",
           characterName: character_name,
           node: {
-            tmdbId: movie.tmdbId,
+            tmdbId: movie.tmdb_id,
             posterPath: movie.poster_path,
             title: movie.title,
           },

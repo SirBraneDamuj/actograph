@@ -10,7 +10,7 @@ const resolvers: Resolvers = {
         throw new Error(`Failed to import movie :( ${params.tmdbId}`);
       }
       return {
-        tmdbId: importedMovie.tmdbId,
+        tmdbId: importedMovie.tmdb_id,
         posterPath: importedMovie.poster_path,
         title: importedMovie.title,
       };
@@ -23,7 +23,7 @@ const resolvers: Resolvers = {
         throw new Error(`Failed to import movie :( ${params.tmdbId}`);
       }
       return {
-        tmdbId: importedMovie.tmdbId,
+        tmdbId: importedMovie.tmdb_id,
         posterPath: importedMovie.poster_path,
         title: importedMovie.title,
       };
@@ -48,7 +48,7 @@ const resolvers: Resolvers = {
                               is: {
                                 AND: {
                                   NOT: {
-                                    tmdbId,
+                                    tmdb_id: tmdbId,
                                   },
                                   watchers: {
                                     some: {
@@ -97,7 +97,7 @@ const resolvers: Resolvers = {
                   return {
                     characterName: character_name,
                     node: {
-                      tmdbId: movie.tmdbId,
+                      tmdbId: movie.tmdb_id,
                       title: movie.title,
                       posterPath: movie.poster_path,
                     },

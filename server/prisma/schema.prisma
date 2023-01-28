@@ -11,37 +11,84 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(uuid()) @db.Uuid
-  username      String      @unique
-  updated_at    DateTime    @updatedAt
-  watchedMovies UserMovie[] @relation("MovieViewer")
+  id              String        @id @default(uuid()) @db.Uuid
+  username        String        @unique
+  updated_at      DateTime      @updatedAt
+  watchedMovies   UserMovie[]
+  watchedEpisodes UserEpisode[]
+
+  @@map("actograph_user")
 }
 
 model Movie {
-  tmdbId       String        @id
+  tmdb_id      String        @id
   title        String
   title_cursor String        @unique
   year         Int
   poster_path  String?
   updated_at   DateTime      @updatedAt
-  watchers     UserMovie[]   @relation("WatchedMovie")
+  watchers     UserMovie[]
   credits      MovieCredit[]
+
+  @@map("movie")
+}
+
+model TvShow {
+  tmdb_id      String      @id
+  title        String
+  title_cursor String      @unique
+  start_year   Int
+  end_year     Int?
+  poster_path  String?
+  episodes     TvEpisode[]
+  updated_at   DateTime    @updatedAt
+
+  @@map("tv_show")
+}
+
+model TvEpisode {
+  id             String            @id @default(uuid()) @db.Uuid
+  tv_show_id     String
+  tv_show        TvShow            @relation(fields: [tv_show_id], references: [tmdb_id])
+  season_number  Int
+  episode_number Int
+  title          String
+  title_cursor   String            @unique
+  watchers       UserEpisode[]
+  credits        TvEpisodeCredit[]
+  updated_at     DateTime          @updatedAt
+
+  @@unique(fields: [tv_show_id, season_number, episode_number])
+  @@map("tv_episode")
 }
 
 model UserMovie {
   user_id    String   @db.Uuid
-  user       User     @relation("MovieViewer", fields: [user_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
   movie_id   String
-  movie      Movie    @relation("WatchedMovie", fields: [movie_id], references: [tmdbId])
+  movie      Movie    @relation(fields: [movie_id], references: [tmdb_id])
   updated_at DateTime @updatedAt
 
   @@id(fields: [user_id, movie_id])
   @@unique(fields: [user_id, updated_at])
+  @@map("user_movie")
+}
+
+model UserEpisode {
+  user_id       String    @db.Uuid
+  user          User      @relation(fields: [user_id], references: [id])
+  tv_episode_id String    @db.Uuid
+  tv_episode    TvEpisode @relation(fields: [tv_episode_id], references: [id])
+  updated_at    DateTime  @updatedAt
+
+  @@id(fields: [user_id, tv_episode_id])
+  @@unique(fields: [user_id, updated_at])
+  @@map("user_episode")
 }
 
 model MovieCredit {
   movie_id       String
-  movie          Movie    @relation(fields: [movie_id], references: [tmdbId])
+  movie          Movie    @relation(fields: [movie_id], references: [tmdb_id])
   actor_id       String
   actor          Person   @relation(fields: [actor_id], references: [tmdb_id])
   character_name String
@@ -49,11 +96,28 @@ model MovieCredit {
   updated_at     DateTime @updatedAt
 
   @@id(fields: [movie_id, actor_id])
+  @@map("movie_credit")
+}
+
+model TvEpisodeCredit {
+  episode_id     String    @db.Uuid
+  episode        TvEpisode @relation(fields: [episode_id], references: [id])
+  actor_id       String
+  actor          Person    @relation(fields: [actor_id], references: [tmdb_id])
+  character_name String
+  updated_at     DateTime  @updatedAt
+
+  @@id(fields: [episode_id, actor_id])
+  @@map("tv_episode_credit")
 }
 
 model Person {
-  tmdb_id      String        @id
+  tmdb_id      String            @id
   name         String
   profile_path String?
   movies       MovieCredit[]
+  episodes     TvEpisodeCredit[]
+  updated_at   DateTime          @updatedAt
+
+  @@map("person")
 }

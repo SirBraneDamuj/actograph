@@ -11,6 +11,9 @@
     "start": "concurrently \"npm run build:graphql:watch\" \"npx nodemon src/index.ts\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "prisma": {
+    "seed": "npx ts-node prisma/seed.ts"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SirBraneDamuj/actograph.git"
