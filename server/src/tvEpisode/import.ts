@@ -1,7 +1,59 @@
 import { TvShow } from "@prisma/client";
+import { EpisodeCreditsResponse } from "moviedb-promise";
 import { v4 as uuidv4 } from "uuid";
 import db from "../db/index.js";
 import Tmdb from "../tmdb.js";
+
+type EpisodeCredit = {
+  character: string;
+  order: number;
+  person: {
+    tmdbId: string;
+    name: string;
+    profilePath?: string;
+  };
+};
+function consolidateCastList(
+  creditsResponse: EpisodeCreditsResponse,
+): EpisodeCredit[] {
+  const castCredits = creditsResponse.cast!.map((castMember, order) => {
+    return {
+      character: castMember.character!,
+      order: order + 1 || 999,
+      person: {
+        tmdbId: castMember.id!.toString(),
+        name: castMember.name!,
+        profilePath: castMember.profile_path || undefined,
+      },
+    };
+  });
+  const guestCredits =
+    creditsResponse.guest_stars?.map((castMember, order) => {
+      return {
+        character: castMember.character!,
+        order: order + 1 + castCredits.length || 999,
+        person: {
+          tmdbId: castMember.id!.toString(),
+          name: castMember.name!,
+          profilePath: castMember.profile_path || undefined,
+        },
+      };
+    }) || [];
+  const allCredits = [...castCredits, ...guestCredits].reduce(
+    (acc, current) => {
+      const prev = acc[current.person.tmdbId];
+      acc[current.person.tmdbId] = prev
+        ? {
+            ...prev,
+            character: `${prev.character} | ${current.character}`,
+          }
+        : current;
+      return acc;
+    },
+    {} as { [actorId: string]: EpisodeCredit },
+  );
+  return Object.keys(allCredits).map((k) => allCredits[k]);
+}
 
 export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
   const existingTvShow = await db.tvShow.findUnique({
@@ -43,7 +95,8 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
   const endYear = loadedTv.last_air_date
     ? new Date(loadedTv.last_air_date).getFullYear()
     : null;
-  const tvShow = db.tvShow.create({
+  console.log("----------------LOADING TV SHOW");
+  return db.tvShow.create({
     data: {
       tmdb_id: tmdbId,
       title,
@@ -59,33 +112,9 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
               ? new Date(details.air_date)
               : null;
             const year = airDate?.getFullYear() || 0;
-            const castCredits = credits.cast!.map((castMember, order) => {
-              return {
-                character_name: castMember.character!,
-                cast_order: order + 1 || 999,
-                person: {
-                  tmdb_id: castMember.id!.toString(),
-                  name: castMember.name!,
-                  profile_path: castMember.profile_path,
-                },
-              };
-            });
-            const guestCredits =
-              credits.guest_stars?.map((castMember, order) => {
-                return {
-                  character_name: castMember.character!,
-                  cast_order: order + 1 + castCredits.length || 999,
-                  person: {
-                    tmdb_id: castMember.id!.toString(),
-                    name: castMember.name!,
-                    profile_path: castMember.profile_path,
-                  },
-                };
-              }) || [];
-            const allCredits = [...castCredits, ...guestCredits];
+            const allCredits = consolidateCastList(credits);
 
             return {
-              tv_show_id: tmdbId,
               season_number,
               episode_number,
               title,
@@ -93,15 +122,15 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
               credits: {
                 create: allCredits.map((credit) => {
                   return {
-                    character_name: credit.character_name,
-                    cast_order: credit.cast_order,
+                    character_name: credit.character,
+                    cast_order: credit.order,
                     actor: {
                       connectOrCreate: {
-                        where: { tmdb_id: credit.person.tmdb_id },
+                        where: { tmdb_id: credit.person.tmdbId },
                         create: {
-                          tmdb_id: credit.person.tmdb_id,
+                          tmdb_id: credit.person.tmdbId,
                           name: credit.person.name,
-                          profile_path: credit.person.profile_path,
+                          profile_path: credit.person.profilePath,
                         },
                       },
                     },
@@ -114,5 +143,4 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
       },
     },
   });
-  return tvShow;
 }

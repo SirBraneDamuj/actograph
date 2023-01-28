@@ -1,0 +1,32 @@
+#import PageInfo from "../graphql/pagination.graphql"
+
+type TvShow {
+  tmdbId: String!
+  title: String!
+  posterPath: String
+  episodes: TvEpisodeConnection
+}
+
+type TvEpisodeConnection {
+  edges: [TvEpisodeEdge!]!
+}
+
+type TvEpisodeEdge {
+  node: TvEpisode!
+  cursor: String!
+}
+
+type TvEpisode {
+  id: String!
+  title: String!
+  seasonNumber: Int!
+  episodeNumber: Int!
+}
+
+input FetchTvShowParams {
+  tmdbId: String!
+}
+
+extend type Query {
+  fetchTvShow(params: FetchTvShowParams!): TvShow
+}
