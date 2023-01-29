@@ -118,6 +118,15 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
       start_year: startYear,
       end_year: endYear,
       poster_path: loadedTv.poster_path,
+      num_seasons: loadedTv.number_of_seasons!,
+      seasons: {
+        create: loadedTv
+          .seasons!.filter(({ season_number }) => season_number !== 0)
+          .map(({ season_number, episode_count }) => ({
+            season_number: season_number || -1,
+            num_episodes: episode_count || -1,
+          })),
+      },
       episodes: {
         create: episodes.map(
           ({ seasonNumber, episodeNumber, credits, details }) => {

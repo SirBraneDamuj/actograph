@@ -7,6 +7,7 @@ import { History } from "./history/History";
 import Home from "./home/Home";
 import Login from "./login/Login";
 import { MovieDetails } from "./movie/MovieDetails";
+import { TvShowDetails } from "./tv/ShowDetails";
 import Watch from "./watch/Watch";
 
 const menuItems = [
@@ -41,6 +42,7 @@ function App() {
             <Route path="/history" element={<History />} />
             <Route path="/watch" element={<Watch />} />
             <Route path="/watch/movie/:tmdbId" element={<MovieDetails />} />
+            <Route path="/watch/tv/:tmdbId" element={<TvShowDetails />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </Content>

@@ -40,10 +40,23 @@ model TvShow {
   start_year   Int
   end_year     Int?
   poster_path  String?
+  num_seasons  Int
+  seasons      TvSeason[]
   episodes     TvEpisode[]
   updated_at   DateTime    @updatedAt
 
   @@map("tv_show")
+}
+
+model TvSeason {
+  id            String @id @default(uuid()) @db.Uuid
+  tv_show_id    String
+  tv_show       TvShow @relation(fields: [tv_show_id], references: [tmdb_id])
+  season_number Int
+  num_episodes  Int
+
+  @@unique(fields: [tv_show_id, season_number])
+  @@map("tv_season")
 }
 
 model TvEpisode {

@@ -4,7 +4,14 @@ type TvShow {
   tmdbId: String!
   title: String!
   posterPath: String
+  seasons: [TvSeason!]!
   episodes: TvEpisodeConnection
+}
+
+type TvSeason {
+  id: ID!
+  seasonNumber: Int!
+  numEpisodes: Int!
 }
 
 type TvEpisodeConnection {
