@@ -1,8 +1,44 @@
 import { TvShow } from "@prisma/client";
-import { EpisodeCreditsResponse } from "moviedb-promise";
+import { Episode, EpisodeCreditsResponse, ShowResponse } from "moviedb-promise";
 import { v4 as uuidv4 } from "uuid";
 import db from "../db/index.js";
 import Tmdb from "../tmdb.js";
+
+type TmdbEpisodeDetails = {
+  tmdbId: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  credits: EpisodeCreditsResponse;
+  details: Episode;
+};
+async function collectEpisodeData(
+  showResponse: ShowResponse,
+): Promise<TmdbEpisodeDetails[]> {
+  const seasons = showResponse.seasons!.filter(
+    (season) => season.season_number! > 0,
+  );
+  return await Promise.all(
+    seasons.flatMap(({ season_number, episode_count }) => {
+      const episodes = [...Array(episode_count!).keys()];
+      return episodes.map(async (n) => {
+        const params = {
+          id: showResponse.id!,
+          season_number: season_number!,
+          episode_number: n + 1,
+        };
+        const details = await Tmdb.episodeInfo(params);
+        const credits = await Tmdb.episodeCredits(params);
+        return {
+          tmdbId: params.id.toString(),
+          seasonNumber: params.season_number,
+          episodeNumber: params.episode_number,
+          credits,
+          details,
+        };
+      });
+    }),
+  );
+}
 
 type EpisodeCredit = {
   character: string;
@@ -68,34 +104,12 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
   if (!loadedTv.id) {
     return null;
   }
-  const seasons = loadedTv.seasons!.filter(
-    (season) => season.season_number! > 0,
-  );
-  const loadedSeasons = await Promise.all(
-    seasons.flatMap(({ season_number, episode_count }) => {
-      const episodes = [...Array(episode_count!).keys()];
-      return episodes.map(async (n) => {
-        const params = {
-          id: tmdbId,
-          season_number: season_number!,
-          episode_number: n + 1,
-        };
-        const details = await Tmdb.episodeInfo(params);
-        const credits = await Tmdb.episodeCredits(params);
-        return {
-          ...params,
-          credits,
-          details,
-        };
-      });
-    }),
-  );
+  const episodes = await collectEpisodeData(loadedTv);
   const title = loadedTv.name!;
   const startYear = new Date(loadedTv.first_air_date!).getFullYear();
   const endYear = loadedTv.last_air_date
     ? new Date(loadedTv.last_air_date).getFullYear()
     : null;
-  console.log("----------------LOADING TV SHOW");
   return db.tvShow.create({
     data: {
       tmdb_id: tmdbId,
@@ -105,37 +119,38 @@ export async function importTvShow(tmdbId: string): Promise<TvShow | null> {
       end_year: endYear,
       poster_path: loadedTv.poster_path,
       episodes: {
-        create: loadedSeasons.map(
-          ({ season_number, episode_number, credits, details }) => {
+        create: episodes.map(
+          ({ seasonNumber, episodeNumber, credits, details }) => {
             const title = details.name!;
             const airDate = details.air_date
               ? new Date(details.air_date)
               : null;
             const year = airDate?.getFullYear() || 0;
             const allCredits = consolidateCastList(credits);
+            const creditsCreate = allCredits.map((credit) => {
+              return {
+                character_name: credit.character,
+                cast_order: credit.order,
+                actor: {
+                  connectOrCreate: {
+                    where: { tmdb_id: credit.person.tmdbId },
+                    create: {
+                      tmdb_id: credit.person.tmdbId,
+                      name: credit.person.name,
+                      profile_path: credit.person.profilePath,
+                    },
+                  },
+                },
+              };
+            });
 
             return {
-              season_number,
-              episode_number,
+              season_number: seasonNumber,
+              episode_number: episodeNumber,
               title,
               title_cursor: `${title}_${year}_${uuidv4()}`,
               credits: {
-                create: allCredits.map((credit) => {
-                  return {
-                    character_name: credit.character,
-                    cast_order: credit.order,
-                    actor: {
-                      connectOrCreate: {
-                        where: { tmdb_id: credit.person.tmdbId },
-                        create: {
-                          tmdb_id: credit.person.tmdbId,
-                          name: credit.person.name,
-                          profile_path: credit.person.profilePath,
-                        },
-                      },
-                    },
-                  };
-                }),
+                create: creditsCreate,
               },
             };
           },
