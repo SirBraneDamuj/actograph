@@ -1,3 +1,4 @@
+import { ExportOutlined } from "@ant-design/icons";
 import { gql, useQuery } from "@apollo/client";
 import { Image, Space } from "antd";
 import { useParams } from "react-router-dom";
@@ -29,6 +30,13 @@ function Details({ tmdbId, title, posterPath, seasons }: TvShowDetailsProps) {
   return (
     <Space direction="vertical">
       <h1>{title}</h1>
+      <a
+        href={`https://www.themoviedb.org/tv/${tmdbId}`}
+        target={"_blank"}
+        rel="noreferrer"
+      >
+        View on TMDB <ExportOutlined />
+      </a>
       <Image
         src={`https://www.themoviedb.org/t/p/w500/${posterPath}`}
         width={200}
@@ -42,7 +50,7 @@ function Details({ tmdbId, title, posterPath, seasons }: TvShowDetailsProps) {
 }
 
 export function TvShowDetails() {
-  const userId = useUserId();
+  useUserId();
   const { tmdbId } = useParams();
   const { loading, data } = useQuery(FETCH_SHOW, {
     variables: {

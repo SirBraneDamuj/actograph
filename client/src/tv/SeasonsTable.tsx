@@ -1,3 +1,4 @@
+import { ExportOutlined } from "@ant-design/icons";
 import { Space, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Link } from "react-router-dom";
@@ -25,8 +26,15 @@ export function SeasonsTable({ tvShowId, seasons }: SeasonsTableProps) {
       render: (_, record: TvSeason) => (
         <Space size="middle">
           <Link to={`/watch/tv/${tvShowId}/season/${record.seasonNumber}`}>
-            View
+            Episodes
           </Link>
+          <a
+            href={`https://www.themoviedb.org/tv/${tvShowId}/season/${record.seasonNumber}`}
+            target={"_blank"}
+            rel="noreferrer"
+          >
+            TMDB <ExportOutlined />
+          </a>
         </Space>
       ),
     },
