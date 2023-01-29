@@ -82,7 +82,6 @@ model UserEpisode {
   updated_at    DateTime  @updatedAt
 
   @@id(fields: [user_id, tv_episode_id])
-  @@unique(fields: [user_id, updated_at])
   @@map("user_episode")
 }
 
@@ -105,6 +104,7 @@ model TvEpisodeCredit {
   actor_id       String
   actor          Person    @relation(fields: [actor_id], references: [tmdb_id])
   character_name String
+  cast_order     Int
   updated_at     DateTime  @updatedAt
 
   @@id(fields: [episode_id, actor_id])

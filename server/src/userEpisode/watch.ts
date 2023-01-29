@@ -12,6 +12,10 @@ export async function unwatchEpisode(userId: string, episodeId: string) {
   });
 }
 
+export async function unwatchShow(userId: string, tmdbId: string) {
+  await db.$executeRaw`DELETE FROM user_episode ue USING tv_episode te WHERE te.tv_show_id=${tmdbId} AND ue.user_id=${userId}::uuid;`;
+}
+
 export async function watchShow(userId: string, tmdbId: string) {
   const show = await importTvShow(tmdbId);
   if (!show) {
@@ -30,8 +34,8 @@ export async function watchShow(userId: string, tmdbId: string) {
   }
   const { episodes } = showWithEpisodes;
   await db.$transaction(async (tx) => {
-    episodes.forEach(({ id }) => {
-      tx.userEpisode.upsert({
+    for (const { id } of episodes) {
+      await tx.userEpisode.upsert({
         create: {
           tv_episode_id: id,
           user_id: userId,
@@ -44,7 +48,7 @@ export async function watchShow(userId: string, tmdbId: string) {
         },
         update: {},
       });
-    });
+    }
   });
   return show;
 }

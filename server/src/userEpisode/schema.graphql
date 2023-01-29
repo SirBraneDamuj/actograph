@@ -1,0 +1,13 @@
+#import TvShow from "../tvEpisode/schema.graphql"
+
+input SetTvShowWatchStatusForUserParams {
+  tmdbId: String!
+  watched: Boolean!
+  userId: ID!
+}
+
+extend type Mutation {
+  setTvShowWatchStatusForUser(
+    params: SetTvShowWatchStatusForUserParams!
+  ): TvShow
+}
