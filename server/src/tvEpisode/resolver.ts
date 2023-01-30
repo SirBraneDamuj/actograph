@@ -1,6 +1,7 @@
 import db from "../db/index.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
 import { importTvShow } from "./import.js";
+import { fetchTvEpisodes } from "./query.js";
 
 const resolvers: Resolvers = {
   Query: {
@@ -27,9 +28,25 @@ const resolvers: Resolvers = {
           seasonNumber: season.season_number,
           numEpisodes: season.num_episodes,
         })),
-        episodes: {
-          edges: [],
-        },
+      };
+    },
+  },
+  TvShow: {
+    episodes: async ({ tmdbId }, _args: unknown, _context: unknown) => {
+      const episodes = await fetchTvEpisodes(tmdbId);
+      return {
+        totalCount: episodes.length,
+        edges: episodes.map((episode) => {
+          return {
+            cursor: episode.title_cursor,
+            node: {
+              id: episode.id,
+              title: episode.title,
+              seasonNumber: episode.season_number,
+              episodeNumber: episode.episode_number,
+            },
+          };
+        }),
       };
     },
   },

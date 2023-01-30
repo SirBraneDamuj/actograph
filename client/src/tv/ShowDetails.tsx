@@ -1,10 +1,10 @@
 import { ExportOutlined } from "@ant-design/icons";
 import { gql, useQuery } from "@apollo/client";
-import { Image, Space } from "antd";
+import { Collapse, Image, Space } from "antd";
 import { useParams } from "react-router-dom";
 import useUserId from "../login/useUserId";
-import { SeasonsTable } from "./SeasonsTable";
-import { TvSeason } from "./types";
+import { SeasonDetails } from "./SeasonsTable";
+import { TvEpisode, TvSeason, TvShowInfo } from "./types";
 
 const FETCH_SHOW = gql`
   query FetchTvShow($params: FetchTvShowParams!) {
@@ -16,17 +16,47 @@ const FETCH_SHOW = gql`
         seasonNumber
         numEpisodes
       }
+      episodes {
+        totalCount
+        edges {
+          cursor
+          node {
+            id
+            title
+            seasonNumber
+            episodeNumber
+          }
+        }
+      }
     }
   }
 `;
 
-type TvShowDetailsProps = {
-  tmdbId: string;
-  title: string;
-  posterPath?: string;
+type TvShowDetailsProps = TvShowInfo & {
   seasons: TvSeason[];
+  episodes: TvEpisode[];
 };
-function Details({ tmdbId, title, posterPath, seasons }: TvShowDetailsProps) {
+function Details(props: TvShowDetailsProps) {
+  const { tmdbId, title, posterPath, seasons, episodes } = props;
+  function seasonCards() {
+    return seasons.map((season) => {
+      const seasonEpisodes = episodes.filter(
+        (episode) => episode.seasonNumber === season.seasonNumber
+      );
+      return (
+        <Collapse.Panel
+          key={season.seasonNumber}
+          header={`Season ${season.seasonNumber}`}
+        >
+          <SeasonDetails
+            tvShow={props}
+            season={season}
+            episodes={seasonEpisodes}
+          />
+        </Collapse.Panel>
+      );
+    });
+  }
   return (
     <Space direction="vertical">
       <h1>{title}</h1>
@@ -44,7 +74,7 @@ function Details({ tmdbId, title, posterPath, seasons }: TvShowDetailsProps) {
         className="poster"
       />
       <h3>Seasons: {seasons.length}</h3>
-      <SeasonsTable seasons={seasons} tvShowId={tmdbId} />
+      <Collapse accordion>{seasonCards()}</Collapse>
     </Space>
   );
 }
@@ -62,5 +92,11 @@ export function TvShowDetails() {
   if (loading) {
     return <div>Loading...</div>;
   }
-  return <Details {...data.fetchTvShow} />;
+  const detailsProps = {
+    ...data.fetchTvShow,
+    episodes: data.fetchTvShow.episodes.edges.map(
+      (episodeEdge: { node: TvEpisode }) => episodeEdge.node
+    ),
+  };
+  return <Details {...detailsProps} />;
 }

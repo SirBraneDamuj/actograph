@@ -15,6 +15,7 @@ type TvSeason {
 }
 
 type TvEpisodeConnection {
+  totalCount: Int!
   edges: [TvEpisodeEdge!]!
 }
 
