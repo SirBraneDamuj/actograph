@@ -7,6 +7,7 @@ import { History } from "./history/History";
 import Home from "./home/Home";
 import Login from "./login/Login";
 import { MovieDetails } from "./movie/MovieDetails";
+import { EpisodeDetails } from "./tv/EpisodeDetails";
 import { TvShowDetails } from "./tv/ShowDetails";
 import Watch from "./watch/Watch";
 
@@ -43,6 +44,10 @@ function App() {
             <Route path="/watch" element={<Watch />} />
             <Route path="/watch/movie/:tmdbId" element={<MovieDetails />} />
             <Route path="/watch/tv/:tmdbId" element={<TvShowDetails />} />
+            <Route
+              path="/watch/tv/:tmdbId/season/:seasonNumber/episode/:episodeNumber"
+              element={<EpisodeDetails />}
+            />
             <Route path="/login" element={<Login />} />
           </Routes>
         </Content>

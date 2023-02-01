@@ -1,35 +1,47 @@
 import db from "../db/index.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
 import { importTvShow } from "./import.js";
-import { fetchTvEpisodes } from "./query.js";
+import { fetchTvEpisode, fetchTvEpisodes } from "./query.js";
+
+const tvShowResolver = async (tmdbId: string) => {
+  const importedShow = await importTvShow(tmdbId);
+  if (!importedShow) {
+    throw new Error(`Failed to import show :( ${tmdbId}`);
+  }
+  return {
+    tmdbId: importedShow.tmdb_id,
+    posterPath: importedShow.poster_path,
+    title: importedShow.title,
+    numSeasons: importedShow.num_seasons,
+    seasons: [],
+  };
+};
 
 const resolvers: Resolvers = {
   Query: {
-    fetchTvShow: async (_parent: unknown, { params }, _context: unknown) => {
-      const importedShow = await importTvShow(params.tmdbId);
-      if (!importedShow) {
-        throw new Error(`Failed to import show :( ${params.tmdbId}`);
+    fetchTvShow: async (_parent: unknown, { params }, _context: unknown) =>
+      tvShowResolver(params.tmdbId),
+    fetchTvEpisode: async (_parent: unknown, { params }, _context: unknown) => {
+      const episode = await fetchTvEpisode(
+        params.tmdbId,
+        params.seasonNumber,
+        params.episodeNumber,
+      );
+      if (!episode) {
+        return null;
       }
-      const seasons = await db.tvSeason.findMany({
-        where: {
-          tv_show_id: params.tmdbId,
-        },
-        orderBy: {
-          season_number: "asc",
-        },
-      });
       return {
-        tmdbId: importedShow.tmdb_id,
-        posterPath: importedShow.poster_path,
-        title: importedShow.title,
-        numSeasons: importedShow.num_seasons,
-        seasons: seasons.map((season) => ({
-          id: season.id,
-          seasonNumber: season.season_number,
-          numEpisodes: season.num_episodes,
-        })),
+        id: episode.id,
+        title: episode.title,
+        tmdbId: episode.tv_show_id,
+        seasonNumber: episode.season_number,
+        episodeNumber: episode.episode_number,
       };
     },
+  },
+  TvEpisode: {
+    tvShow: async ({ tmdbId }, _args: unknown, _context: unknown) =>
+      tvShowResolver(tmdbId),
   },
   TvShow: {
     episodes: async ({ tmdbId }, _args: unknown, _context: unknown) => {
@@ -42,12 +54,28 @@ const resolvers: Resolvers = {
             node: {
               id: episode.id,
               title: episode.title,
+              tmdbId: episode.tv_show_id,
               seasonNumber: episode.season_number,
               episodeNumber: episode.episode_number,
             },
           };
         }),
       };
+    },
+    seasons: async ({ tmdbId }, _args: unknown, _context: unknown) => {
+      const seasons = await db.tvSeason.findMany({
+        where: {
+          tv_show_id: tmdbId,
+        },
+        orderBy: {
+          season_number: "asc",
+        },
+      });
+      return seasons.map((season) => ({
+        id: season.id,
+        seasonNumber: season.season_number,
+        numEpisodes: season.num_episodes,
+      }));
     },
   },
 };

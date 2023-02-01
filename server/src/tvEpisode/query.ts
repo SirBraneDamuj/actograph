@@ -15,3 +15,19 @@ export async function fetchTvEpisodes(tmdbId: string) {
     ],
   });
 }
+
+export async function fetchTvEpisode(
+  tmdbId: string,
+  seasonNumber: number,
+  episodeNumber: number,
+) {
+  return db.tvEpisode.findUnique({
+    where: {
+      tv_show_id_season_number_episode_number: {
+        tv_show_id: tmdbId,
+        season_number: seasonNumber,
+        episode_number: episodeNumber,
+      },
+    },
+  });
+}

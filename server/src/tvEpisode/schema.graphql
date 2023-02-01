@@ -29,12 +29,25 @@ type TvEpisode {
   title: String!
   seasonNumber: Int!
   episodeNumber: Int!
+  tmdbId: String!
+  tvShow: TvShow
 }
 
 input FetchTvShowParams {
   tmdbId: String!
 }
 
+input FetchTvEpisodeParams {
+  tmdbId: String!
+  seasonNumber: Int!
+  episodeNumber: Int!
+}
+
+type TvEpisodeResponse {
+  episode: TvEpisode!
+}
+
 extend type Query {
   fetchTvShow(params: FetchTvShowParams!): TvShow
+  fetchTvEpisode(params: FetchTvEpisodeParams!): TvEpisode
 }
