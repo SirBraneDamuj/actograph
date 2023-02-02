@@ -17,3 +17,8 @@ export type PersonCastEdge = {
     };
   };
 };
+
+export enum CastListType {
+  ALL,
+  PERSONAL,
+}

@@ -3,6 +3,7 @@ import { Image, Space, Switch } from "antd";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { CastList } from "../cast/CastList";
+import { CastListType } from "../cast/types";
 import useUserId from "../login/useUserId";
 
 const WATCHED_STATS = gql`
@@ -80,11 +81,6 @@ const FETCH_MOVIE_WITH_PERSONALIZED_CAST = gql`
     }
   }
 `;
-
-enum CastListType {
-  ALL,
-  PERSONAL,
-}
 
 type BaseMovieDetailsProps = {
   tmdbId: string;
