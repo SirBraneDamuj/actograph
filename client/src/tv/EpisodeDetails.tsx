@@ -1,6 +1,8 @@
 import { gql, useQuery } from "@apollo/client";
 import { Image, Space } from "antd";
 import { useParams } from "react-router-dom";
+import { CastList } from "../cast/CastList";
+import { PersonCastEdge } from "../cast/types";
 import useUserId from "../login/useUserId";
 import { TvEpisode, TvShowInfo } from "./types";
 
@@ -16,6 +18,16 @@ const FETCH_EPISODE = gql`
         title
         posterPath
       }
+      credits {
+        edges {
+          characterName
+          node {
+            tmdbId
+            name
+            profilePath
+          }
+        }
+      }
     }
   }
 `;
@@ -23,6 +35,7 @@ const FETCH_EPISODE = gql`
 type DetailsProps = TvEpisode & {
   tmdbId: string;
   tvShow: TvShowInfo;
+  credits: PersonCastEdge[];
 };
 
 function Details({
@@ -31,6 +44,7 @@ function Details({
   seasonNumber,
   episodeNumber,
   tvShow,
+  credits,
 }: DetailsProps) {
   const { title: showTitle, posterPath } = tvShow;
   return (
@@ -46,6 +60,7 @@ function Details({
         alt={`Poster for ${showTitle}`}
         className="poster"
       />
+      <CastList cast={credits} showRelated={false} />
     </Space>
   );
 }
@@ -66,5 +81,10 @@ export function EpisodeDetails() {
   if (loading) {
     return null;
   }
-  return <Details {...data.fetchTvEpisode} />;
+  return (
+    <Details
+      {...data.fetchTvEpisode}
+      credits={data.fetchTvEpisode.credits.edges}
+    />
+  );
 }

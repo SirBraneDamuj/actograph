@@ -16,6 +16,10 @@ extend type Movie {
   credits(params: MovieCreditsParams): CreditsConnection
 }
 
+extend type TvEpisode {
+  credits(params: MovieCreditsParams): CreditsConnection
+}
+
 type CreditsConnection {
   totalCount: Int!
   edges: [CreditsEdge!]!

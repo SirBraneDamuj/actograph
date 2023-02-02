@@ -31,3 +31,17 @@ export async function fetchTvEpisode(
     },
   });
 }
+
+export async function fetchTvEpisodeCredits(id: string) {
+  return db.tvEpisodeCredit.findMany({
+    where: {
+      episode_id: id,
+    },
+    include: {
+      actor: true,
+    },
+    orderBy: {
+      cast_order: "asc",
+    },
+  });
+}

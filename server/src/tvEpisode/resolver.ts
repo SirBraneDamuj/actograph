@@ -1,7 +1,11 @@
 import db from "../db/index.js";
 import { Resolvers } from "../__generated__/resolvers-types.js";
 import { importTvShow } from "./import.js";
-import { fetchTvEpisode, fetchTvEpisodes } from "./query.js";
+import {
+  fetchTvEpisode,
+  fetchTvEpisodeCredits,
+  fetchTvEpisodes,
+} from "./query.js";
 
 const tvShowResolver = async (tmdbId: string) => {
   const importedShow = await importTvShow(tmdbId);
@@ -42,6 +46,24 @@ const resolvers: Resolvers = {
   TvEpisode: {
     tvShow: async ({ tmdbId }, _args: unknown, _context: unknown) =>
       tvShowResolver(tmdbId),
+    credits: async ({ id }, { params }, _context: unknown) => {
+      const userId = params?.userId;
+      const credits = await fetchTvEpisodeCredits(id);
+      return {
+        totalCount: credits.length,
+        edges: credits.map((credit) => {
+          return {
+            cursor: credit.actor_id,
+            characterName: credit.character_name,
+            node: {
+              tmdbId: credit.actor.tmdb_id,
+              name: credit.actor.name,
+              profilePath: credit.actor.profile_path,
+            },
+          };
+        }),
+      };
+    },
   },
   TvShow: {
     episodes: async ({ tmdbId }, _args: unknown, _context: unknown) => {
