@@ -45,3 +45,7 @@ export async function fetchTvEpisodeCredits(id: string) {
     },
   });
 }
+
+export async function fetchTvEpisodeCreditsForUser(id: string, userId: string) {
+  return "foo";
+}

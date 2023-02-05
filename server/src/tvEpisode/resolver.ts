@@ -46,8 +46,7 @@ const resolvers: Resolvers = {
   TvEpisode: {
     tvShow: async ({ tmdbId }, _args: unknown, _context: unknown) =>
       tvShowResolver(tmdbId),
-    credits: async ({ id }, { params }, _context: unknown) => {
-      const userId = params?.userId;
+    credits: async ({ id }, _args: unknown, _context: unknown) => {
       const credits = await fetchTvEpisodeCredits(id);
       return {
         totalCount: credits.length,

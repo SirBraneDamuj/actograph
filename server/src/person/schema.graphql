@@ -1,23 +1,51 @@
 #import Movie from '../movie/schema.graphql';
+#import TvEpisode from '../tvEpisode/schema.graphql'
 #import PageInfo from '../graphql/pagination.graphql'
 
 type Person {
   tmdbId: String!
   name: String!
   profilePath: String
-  movies: StarredInConnection
+  movies(params: PersonalizedCreditConnectionParams): MovieCreditConnection
+  episodes(params: PersonalizedCreditConnectionParams): EpisodeCreditConnection
 }
 
-input MovieCreditsParams {
+input PersonalizedCreditConnectionParams {
   userId: ID!
+  exceptMovie: String
+  exceptTvShow: String
+}
+
+type MovieCreditConnection {
+  totalCount: Int!
+  edges: [MovieCreditEdge!]!
+  pageInfo: PageInfo
+}
+
+type MovieCreditEdge {
+  node: Movie!
+  cursor: String!
+  characterName: String
+}
+
+type EpisodeCreditConnection {
+  totalCount: Int!
+  edges: [EpisodeCreditEdge!]!
+  pageInfo: PageInfo
+}
+
+type EpisodeCreditEdge {
+  node: TvEpisode!
+  cursor: String!
+  characterName: String
 }
 
 extend type Movie {
-  credits(params: MovieCreditsParams): CreditsConnection
+  credits: CreditsConnection
 }
 
 extend type TvEpisode {
-  credits(params: MovieCreditsParams): CreditsConnection
+  credits: CreditsConnection
 }
 
 type CreditsConnection {
@@ -28,18 +56,6 @@ type CreditsConnection {
 
 type CreditsEdge {
   node: Person!
-  cursor: String!
-  characterName: String
-}
-
-type StarredInConnection {
-  totalCount: Int!
-  edges: [StarredInEdge!]!
-  pageInfo: PageInfo
-}
-
-type StarredInEdge {
-  node: Movie!
   cursor: String!
   characterName: String
 }

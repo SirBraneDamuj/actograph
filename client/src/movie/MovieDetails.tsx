@@ -50,13 +50,13 @@ const FETCH_MOVIE_WITH_CAST = gql`
 const FETCH_MOVIE_WITH_PERSONALIZED_CAST = gql`
   query FetchMovieWithPersonalizedCast(
     $params: FetchMovieParams!
-    $creditsParams: MovieCreditsParams
+    $creditsParams: PersonalizedCreditConnectionParams
   ) {
     fetchMovie(params: $params) {
       tmdbId
       title
       posterPath
-      credits(params: $creditsParams) {
+      credits {
         totalCount
         edges {
           characterName
@@ -64,7 +64,7 @@ const FETCH_MOVIE_WITH_PERSONALIZED_CAST = gql`
             tmdbId
             name
             profilePath
-            movies {
+            movies(params: $creditsParams) {
               totalCount
               edges {
                 characterName
@@ -72,6 +72,21 @@ const FETCH_MOVIE_WITH_PERSONALIZED_CAST = gql`
                   tmdbId
                   title
                   posterPath
+                }
+              }
+            }
+            episodes(params: $creditsParams) {
+              totalCount
+              edges {
+                characterName
+                node {
+                  tmdbId
+                  title
+                  tvShow {
+                    tmdbId
+                    title
+                    posterPath
+                  }
                 }
               }
             }
@@ -174,6 +189,7 @@ function PersonalizedMovieDetails({
       },
       creditsParams: {
         userId,
+        exceptMovie: tmdbId,
       },
     },
   });

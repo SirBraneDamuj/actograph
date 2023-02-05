@@ -64,14 +64,14 @@ export async function userMovieQuery(
         ...base,
         cursor: pageParams?.after
           ? {
-              user_id_updated_at: {
+              user_id_updated_at_serial: {
                 user_id: userId,
-                updated_at: pageParams.after,
+                updated_at_serial: pageParams.after,
               },
             }
           : undefined,
         orderBy: {
-          updated_at: orderByDirection,
+          updated_at_serial: orderByDirection,
         },
       });
   }
@@ -88,16 +88,7 @@ function getAggregateResult(userId: string, sortParams: UserMovieSortParams) {
     case WatchedMovieSortField.Title:
       return db.$queryRaw`SELECT min(m.title_cursor) as min, max(m.title_cursor) as max, count(1) as count from user_movie um join movie m on um.movie_id=m.tmdb_id where um.user_id = ${userId}::uuid group by um.user_id`;
     case WatchedMovieSortField.WatchDate:
-      return db.$queryRaw`SELECT min(updated_at) as min, max(updated_at) as max, count(1) as count from user_movie um where um.user_id = ${userId}::uuid group by um.user_id`;
-  }
-}
-
-function normalizeCursor(field: WatchedMovieSortField, cursor: string | Date) {
-  switch (field) {
-    case WatchedMovieSortField.Title:
-      return cursor as string;
-    case WatchedMovieSortField.WatchDate:
-      return (cursor as Date).toISOString();
+      return db.$queryRaw`SELECT min(updated_at_serial) as min, max(updated_at_serial) as max, count(1) as count from user_movie um where um.user_id = ${userId}::uuid group by um.user_id`;
   }
 }
 
@@ -120,8 +111,8 @@ export async function userMovieAgg(
   const [{ max, min, count }] = result;
   return {
     totalCount: Number(count),
-    maxCursor: normalizeCursor(sortParams.by, max),
-    minCursor: normalizeCursor(sortParams.by, min),
+    maxCursor: max,
+    minCursor: min,
   };
 }
 

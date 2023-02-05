@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import db from "../db/index.js";
 
 import { importTvShow } from "../tvEpisode/import.js";
@@ -35,10 +36,13 @@ export async function watchShow(userId: string, tmdbId: string) {
   const { episodes } = showWithEpisodes;
   await db.$transaction(async (tx) => {
     for (const { id } of episodes) {
+      const timestamp = new Date();
       await tx.userEpisode.upsert({
         create: {
           tv_episode_id: id,
           user_id: userId,
+          updated_at: timestamp,
+          updated_at_serial: `${timestamp.toISOString()}_${uuidv4()}`,
         },
         where: {
           user_id_tv_episode_id: {

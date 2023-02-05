@@ -69,7 +69,7 @@ function userMovieCursor(
     case WatchedMovieSortField.Title:
       return userMovie.movie.title_cursor;
     case WatchedMovieSortField.WatchDate:
-      return userMovie.updated_at.toISOString();
+      return userMovie.updated_at_serial;
   }
 }
 

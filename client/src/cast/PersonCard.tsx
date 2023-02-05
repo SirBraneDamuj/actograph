@@ -58,6 +58,37 @@ function BaseCard({ person, cardContent }: BaseCardProps) {
   );
 }
 
+type TvAppearanceCardProps = {
+  otherShow: {
+    title: string;
+    posterPath?: string;
+    tmdbId: string;
+    appearances: PersonCastEdge["node"]["episodes"];
+  };
+};
+function TvAppearanceCard({ otherShow }: TvAppearanceCardProps) {
+  const { title: showTitle, appearances, posterPath } = otherShow;
+  const characters = Array.from(
+    appearances.edges.reduce((acc, appearance) => {
+      return acc.add(appearance.characterName);
+    }, new Set<string>())
+  ).join(" / ");
+  return (
+    <Card
+      type="inner"
+      title={showTitle}
+      cover={
+        <img
+          src={`https://www.themoviedb.org/t/p/w500/${posterPath}`}
+          alt={showTitle}
+        />
+      }
+    >
+      {characters}
+    </Card>
+  );
+}
+
 type AppearanceCardProps = {
   otherMovie: PersonCastEdge["node"]["movies"]["edges"][number];
 };
@@ -93,12 +124,45 @@ export function CharacterCardWithOtherAppearances({
   person,
 }: CharacterCardWithRelatedProps) {
   function creditsCards() {
-    const cards = person.node.movies.edges.map((otherMovie, i) => (
+    const movieCards = person.node.movies.edges.map((otherMovie, i) => (
       <Col {...castListSpans} key={`${otherMovie.node.tmdbId}_${i}`}>
         <AppearanceCard otherMovie={otherMovie} />
       </Col>
     ));
-    return <Row gutter={[5, 5]}>{cards}</Row>;
+    const shows = person.node.episodes.edges.reduce((acc, episode) => {
+      const k = episode.node.tvShow.tmdbId;
+      const prev = acc[k];
+      acc[k] = prev ? [...prev, episode] : [episode];
+      return acc;
+    }, {} as { [showId: string]: PersonCastEdge["node"]["episodes"]["edges"] });
+    const tvCards = Object.keys(shows).map((showId, i) => {
+      const episodes = shows[showId];
+      const otherShow = {
+        tmdbId: episodes[0].node.tvShow.tmdbId,
+        title: episodes[0].node.tvShow.title,
+        posterPath: episodes[0].node.tvShow.posterPath,
+        appearances: {
+          totalCount: episodes.length,
+          edges: episodes,
+        },
+      };
+      return (
+        <Col {...castListSpans} key={`${showId}_${i}`}>
+          <TvAppearanceCard otherShow={otherShow} />
+        </Col>
+      );
+    });
+    if (tvCards.length === 0 && movieCards.length === 0) {
+      return null;
+    }
+    return (
+      <Space direction="vertical">
+        <h3>Movies</h3>
+        <Row gutter={[5, 5]}>{movieCards}</Row>
+        <h3>TV</h3>
+        <Row gutter={[5, 5]}>{tvCards}</Row>
+      </Space>
+    );
   }
   return <BaseCard person={person} cardContent={creditsCards()} />;
 }
