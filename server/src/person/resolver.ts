@@ -53,7 +53,7 @@ const resolvers: Resolvers = {
         ? fetchPersonalizedTvCreditsForActor(
             tmdbId,
             params.userId,
-            params.exceptMovie || undefined,
+            params.exceptTvShow || undefined,
           )
         : fetchTvCreditsForActor(tmdbId));
       return {

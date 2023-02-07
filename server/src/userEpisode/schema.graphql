@@ -1,4 +1,5 @@
 #import TvShow from "../tvEpisode/schema.graphql"
+#import TvEpisode from "../tvEpisode/schema.graphql"
 
 input SetTvShowWatchStatusForUserParams {
   tmdbId: String!
@@ -6,8 +7,34 @@ input SetTvShowWatchStatusForUserParams {
   userId: ID!
 }
 
+input SetTvEpisodeWatchStatusForUserParams {
+  id: ID!
+  watched: Boolean!
+  userId: ID!
+}
+
+type WatchedTvEpisodeEdge {
+  node: TvEpisode!
+  cursor: String!
+  watchTimestamp: String!
+}
+
+input FetchWatchedTvEpisodeParams {
+  id: ID!
+  userId: ID!
+}
+
+extend type Query {
+  fetchWatchedEpisode(
+    params: FetchWatchedTvEpisodeParams!
+  ): WatchedTvEpisodeEdge
+}
+
 extend type Mutation {
   setTvShowWatchStatusForUser(
     params: SetTvShowWatchStatusForUserParams!
   ): TvShow
+  setTvEpisodeWatchStatusForUser(
+    params: SetTvEpisodeWatchStatusForUserParams!
+  ): WatchedTvEpisodeEdge
 }

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import db from "../db/index.js";
-
 import { importTvShow } from "../tvEpisode/import.js";
+
 export async function unwatchEpisode(userId: string, episodeId: string) {
   await db.userEpisode.delete({
     where: {
@@ -9,6 +9,28 @@ export async function unwatchEpisode(userId: string, episodeId: string) {
         user_id: userId,
         tv_episode_id: episodeId,
       },
+    },
+  });
+}
+
+export async function watchEpisode(userId: string, episodeId: string) {
+  const timestamp = new Date();
+  return db.userEpisode.upsert({
+    create: {
+      tv_episode_id: episodeId,
+      user_id: userId,
+      updated_at: timestamp,
+      updated_at_serial: `${timestamp.toISOString()}_${uuidv4()}`,
+    },
+    where: {
+      user_id_tv_episode_id: {
+        user_id: userId,
+        tv_episode_id: episodeId,
+      },
+    },
+    update: {},
+    include: {
+      tv_episode: true,
     },
   });
 }

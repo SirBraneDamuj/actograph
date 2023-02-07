@@ -1,6 +1,6 @@
 import { ExportOutlined } from "@ant-design/icons";
-import { gql, useQuery } from "@apollo/client";
-import { Collapse, Image, Space } from "antd";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import { Button, Collapse, Image, Space } from "antd";
 import { useParams } from "react-router-dom";
 import useUserId from "../login/useUserId";
 import { SeasonDetails } from "./SeasonsTable";
@@ -32,12 +32,54 @@ const FETCH_SHOW = gql`
   }
 `;
 
+const SET_SHOW_WATCH_STATUS = gql`
+  mutation WatchTvShow($params: SetTvShowWatchStatusForUserParams!) {
+    setTvShowWatchStatusForUser(params: $params) {
+      tmdbId
+      title
+      posterPath
+    }
+  }
+`;
+
+type TvShowWatchButtonsProps = {
+  tmdbId: string;
+  userId: string;
+};
+function TvShowWatchButtons({ tmdbId, userId }: TvShowWatchButtonsProps) {
+  const [setShowStatus, { loading }] = useMutation(SET_SHOW_WATCH_STATUS);
+  function setWatchStatusHandler(watchStatus: boolean) {
+    return () => {
+      setShowStatus({
+        variables: {
+          params: {
+            tmdbId,
+            watched: watchStatus,
+            userId,
+          },
+        },
+      });
+    };
+  }
+  return (
+    <Space direction="horizontal">
+      <Button disabled={loading} onClick={setWatchStatusHandler(true)}>
+        Watch
+      </Button>
+      <Button disabled={loading} onClick={setWatchStatusHandler(false)}>
+        Unwatch
+      </Button>
+    </Space>
+  );
+}
+
 type TvShowDetailsProps = TvShowInfo & {
   seasons: TvSeason[];
   episodes: TvEpisode[];
+  userId: string;
 };
 function Details(props: TvShowDetailsProps) {
-  const { tmdbId, title, posterPath, seasons, episodes } = props;
+  const { tmdbId, title, posterPath, seasons, episodes, userId } = props;
   function seasonCards() {
     return seasons.map((season) => {
       const seasonEpisodes = episodes.filter(
@@ -59,7 +101,9 @@ function Details(props: TvShowDetailsProps) {
   }
   return (
     <Space direction="vertical">
-      <h1>{title}</h1>
+      <h1>
+        {title} <TvShowWatchButtons tmdbId={tmdbId} userId={userId} />
+      </h1>
       <a
         href={`https://www.themoviedb.org/tv/${tmdbId}`}
         target={"_blank"}
@@ -80,7 +124,7 @@ function Details(props: TvShowDetailsProps) {
 }
 
 export function TvShowDetails() {
-  useUserId();
+  const userId = useUserId();
   const { tmdbId } = useParams();
   const { loading, data } = useQuery(FETCH_SHOW, {
     variables: {
@@ -89,7 +133,7 @@ export function TvShowDetails() {
       },
     },
   });
-  if (loading) {
+  if (loading || !userId) {
     return <div>Loading...</div>;
   }
   const detailsProps = {
@@ -97,6 +141,7 @@ export function TvShowDetails() {
     episodes: data.fetchTvShow.episodes.edges.map(
       (episodeEdge: { node: TvEpisode }) => episodeEdge.node
     ),
+    userId,
   };
   return <Details {...detailsProps} />;
 }
