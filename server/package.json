@@ -8,10 +8,15 @@
     "clean": "npx rimraf ./dist",
     "seed:movies": "npx ts-node src/seed/movies.ts",
     "build": "npx tsc",
+    "build:prisma": "npx prisma generate",
     "build:graphql": "graphql-codegen --config codegen.yml",
+    "build:graphql:dist": "npx copyfiles src/**/*.graphql dist",
     "build:graphql:watch": "graphql-codegen --config codegen.yml --watch",
     "start": "concurrently \"npm run build:graphql:watch\" \"npx nodemon src/index.ts\"",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=16.0.0 <17.0.0"
   },
   "prisma": {
     "seed": "npx ts-node prisma/seed.ts"

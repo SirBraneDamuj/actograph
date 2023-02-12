@@ -130,3 +130,6 @@ dist
 .pnp.*
 
 __generated__
+
+*.tar.gz
+*.zip

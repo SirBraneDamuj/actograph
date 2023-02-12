@@ -10,10 +10,12 @@ import "reflect-metadata";
 import db from "./db/index.js";
 import { buildServer } from "./graphql/index.js";
 
+console.log("STARTING SERVER...");
+
 dotenv.config();
 
 const app: Express = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
 
 const server = buildServer([ApolloServerPluginDrainHttpServer({ httpServer })]);
