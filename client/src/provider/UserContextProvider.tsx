@@ -16,7 +16,7 @@ type UserContextProviderProps = {
 
 export function UserContextProvider({ children }: UserContextProviderProps) {
   const [context, setContext] = useState<UserContextType>({
-    userId: "49480f48-2a51-4e74-9af6-58b8b6fda848",
+    userId: null,
     setUserId: (newId: string) => {
       setContext({ ...context, userId: newId });
     },
